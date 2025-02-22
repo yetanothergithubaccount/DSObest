@@ -10,13 +10,9 @@ Some DSOs found in catalogues like
 - Orphaned Beauties: https://www.astrobin.com/in2ev8/
 - Faint Giants: https://www.astrobin.com/0unmpq/
 
-python3 DSO_observation_planning.py -c -p # create full catalogue and all plots
+python3 DSO_observation_planning.py --dso M31 --best # find best time and date to observe M31
 
-python3 DSO_observation_planning.py --dso M31 --plot
-
-python3 DSO_observation_planning.py --dso M31 --plot -t 24.06.2024
-
-python3 DSO_observation_planning.py --dso M78 -b # find best time and date to observe M78
+python3 DSO_observation_planning.py --best
 
 Determining and plotting the altitude/azimuth of a celestial object per day.
 The results will be fixed in a json-file per day for quick reference.
