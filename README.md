@@ -55,6 +55,6 @@ DSO every month of the current year. If no DSO is specified all DSOs from the
 list in DSO_observation_planning.py are calculated.
 Good months are plotted in darker colours, sub-optimal months in pastel colours.
 
-![M31 in 2025](https://github.com/yetanothergithubaccount/DSObest/blob/master/DSO_M31_2025.png)
-![IC434 in 2025](https://github.com/yetanothergithubaccount/DSObest/blob/master/DSO_IC434_2025.png)
-![NGC6888 in 2025](https://github.com/yetanothergithubaccount/DSObest/blob/master/DSO_NGC6888_2025.png)
+![M31 in 2025](https://github.com/yetanothergithubaccount/DSObest/blob/main/DSO_M31_2025.png)
+![IC434 in 2025](https://github.com/yetanothergithubaccount/DSObest/blob/main/DSO_IC434_2025.png)
+![NGC6888 in 2025](https://github.com/yetanothergithubaccount/DSObest/blob/main/DSO_NGC6888_2025.png)
