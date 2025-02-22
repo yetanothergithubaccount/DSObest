@@ -468,7 +468,7 @@ def plot(dsolist):
           top_score = True
           sub_text += "\n" + msg
         if moon_dir != direction_max_alt_total:
-          msg = "Quite good: Moon dir: " + str(moon_dir) + " DSO dir: " + str(direction_max_alt_total)
+          msg = "Quite good: Moon dir: " + str(moon_dir) + ", DSO dir: " + str(direction_max_alt_total)
           if debug:
             print(msg)
           score = True
@@ -558,6 +558,7 @@ def plot(dsolist):
       #if len(sub_text)>0:
       #  plt.figtext(0.1,-0.5, sub_text, ha="center", va="baseline", fontsize=10, bbox={"facecolor":"lightyellow", "alpha":0.5, "pad":5})
       #  #plt.text(0.5,0.5, sub_text, fontsize=10)
+    print(sub_text)
 
     '''
     plt.fill_between(
