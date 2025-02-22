@@ -542,7 +542,9 @@ def plot(dsolist):
       label_text = str(dso.max_alt_time.strftime("%d.%m"))
       if top_score:
         label_text = str(dso.max_alt_time.strftime("%d.%m")) + " " +  str(dso.max_alt_time.strftime("%H:%M"))
-
+      alpha_value = 1
+      if not top_score:
+        alpha_value = 0.3
       plt.scatter(
           dso.delta_midnight,
           dso.the_objectaltazs_over_night.alt,
@@ -550,7 +552,8 @@ def plot(dsolist):
           c=color_code,
           label=label_text,
           linewidths=0,
-          s=8)
+          s=8,
+          alpha=alpha_value)
       #if len(sub_text)>0:
       #  plt.figtext(0.1,-0.5, sub_text, ha="center", va="baseline", fontsize=10, bbox={"facecolor":"lightyellow", "alpha":0.5, "pad":5})
       #  #plt.text(0.5,0.5, sub_text, fontsize=10)
