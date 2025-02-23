@@ -429,9 +429,14 @@ Invisible DSOs:
 ```
 
 
-The additional option --justthetopones allows to look at the TOP DSOs of that night only:
+The additional option -j/--justthetopones allows to look at the TOP DSOs of that night only:
 ```
 python3 DSO_observation_planning.py --tonight --moon --justthetopones
+```
+
+The additional option -r/--direction allows to look at the TOP DSOs of that night which appear in a certain direction (S/W/N/E) only:
+```
+python3 DSO_observation_planning.py --tonight --moon --justthetopones --direction S
 ```
 
 ## Blog
