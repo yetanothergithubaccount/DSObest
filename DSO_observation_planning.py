@@ -50,7 +50,6 @@ import config # own
 import sky_utils # own
 import pytz
 
-
 debug = False #True
 base_dir = "./"
 
@@ -77,6 +76,14 @@ parser.add_option('-b', '--best',
     action="store_true", dest="best",
     help="Check visibility during the year to find best date and time", default=False)
 
+parser.add_option('-t', '--tonight',
+    action="store_true", dest="tonight",
+    help="Check visibility of DSOs tonight to find best time", default=False)
+parser.add_option('-m', '--moon',
+    action="store_true", dest="moon",
+    help="Consider moon (illumination, location) during tonights checks.", default=False)
+
+
 options, args = parser.parse_args()
 
 if options.latitude:
@@ -92,9 +99,9 @@ if options.location:
   location = options.location
 
 if options.dso:
-  the_object_name = str(options.dso).upper()
+  dso_name = str(options.dso).upper()
 else:
-  the_object_name = str("M31")
+  dso_name = str("M31")
 
 today = datetime.date.today()
 theDate = today.strftime("%d.%m.%Y")
@@ -103,13 +110,16 @@ if options.debug:
   debug = True
 
 my_DSO_list = ["M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10", "M11", "M12", "M13", "M14", "M15", "M16", "M17", "M18", "M19", "M20", "M21", "M22", "M23", "M24", "M25", "M26", "M27", "M28", "M29", "M30", "M31", "M32", "M33", "M34", "M35", "M36", "M37", "M38", "M39", "M40", "M41", "M42", "M43", "M44", "M45", "M46", "M47", "M48", "M49", "M50", "M51", "M52", "M53", "M54", "M55", "M56", "M57", "M58", "M59", "M60", "M61", "M62", "M63", "M64", "M65", "M66", "M67", "M68", "M69", "M70", "M71", "M72", "M73", "M74", "M75", "M76", "M77", "M78", "M79", "M80", "M81", "M82", "M83", "M84", "M85", "M86", "M87", "M88", "M89", "M90", "M91", "M92", "M93", "M94", "M95", "M96", "M97", "M98", "M99", "M100", "M101", "M102", "M103", "M104", "M105", "M106", "M107", "M108", "M109", "M110", "NGC7822", "SH2-173", "NGC210", "IC63", "SH2-188", "NGC613", "NGC660", "NGC672", "NGC918", "IC1795", "IC1805", "NGC1055", "IC1848", "SH2-200", "NGC1350", "NGC1499", "LBN777", "NGC1532", "LDN1495", "NGC1555", "NGC1530", "NGC1624", "NGC1664", "Melotte15", "vdb31", "NGC1721", "IC2118", "IC410", "SH2-223", "SH2-224", "IC434", "SH2-240", "LDN1622", "SH2-261", "SH2-254", "NGC2202", "IC443", "NGC2146", "NGC2217", "NGC2245", "SH2-308", "NGC2327", "SH2-301", "Abell21", "NGC2835", "Abell33", "NGC2976","Arp316", "NGC3359", "Arp214", "NGC4395", "NGC4535", "Abell35", "NGC5068", "NGC5297", "NGC5371", "NGC5364", "NGC5634", "NGC5701", "NGC5963", "NGC5982", "IC4592", "IC4628", "Barnard59", "SH2-003", "Barnard252", "NGC6334", "NGC6357", "Barnard75", "NGC6384", "SH2-54", "vdb126", "SH2-82", "NGC6820", "SH2-101", "WR134", "LBN331", "LBN325", "SH2-112", "SH2-115", "LBN468", "IC5070", "vdb141", "SH2-114", "vdb152", "SH2-132", "Arp319", "NGC7497", "SH2-157", "NGC7606", "Abell85", "LBN 564", "SH2-170", "LBN603", "LBN639", "LBN640", "LDN1333", "NGC1097", "LBN762", "SH2-202", "vdb14", "vdb15", "LDN1455", "vdb13", "vdb16", "IC348", "SH2-205", "SH2-204", "Barnard208", "Barnard7", "vdb27", "Barnard8", "Barnard18", "SH2-216", "Abell7", "SH2-263", "SH2-265", "SH2-232", "Barnard35", "SH2-249", "IC447", "SH2-280", "SH2-282", "SH2-304", "SH2-284", "LBN1036", "NGC2353", "SH2-310", "SH2-302", "Gum14", "Gum15", "Gum17", "Abell31", "SH2-1", "SH2-273", "SH2-46", "SH2-34", "IC4685", "SH2-91", "Barnard147", "IC1318", "LBN380", "Barnard150", "LBN552", "SH2-119", "SH2-124", "Barnard169", "LBN420", "SH2-134", "SH2-150", "LDN1251", "LBN438", "SH2-154", "LDN1218", "SH2-160", "SH2-122", "LBN575", "LDN1262", "LBN534", "vdb158", "NGC7380", "NGC6543", "NGC2264", "NGC474", "NGC246", "NGC7479", "NGC7741", "IC5068", "SH2-155", "NGC7008", "NGC4676A", "NGC4536", "NGC2403", "IC11", "NGC2359", "IC5067", "NGC281", "IC44", "NGC6992", "NGC7293", "NGC6960", "IC4703", "NGC6618", "NGC6826", "NGC7662"]
+#my_DSO_list = ["M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10", "M11", "M12", "M13", "M14", "M15", "M16", "M17", "M18", "M19", "M20", "M21", "M22", "M23", "M24", "M25", "M26", "M27", "M28", "M29", "M30", "M31", "M32", "M33", "M34", "M35", "M36", "M37", "M38", "M39", "M40", "M41", "M42", "M43", "M44", "M45", "M46", "M47", "M48", "M49", "M50", "M51", "M52", "M53", "M54", "M55", "M56", "M57", "M58", "M59", "M60", "M61", "M62", "M63", "M64", "M65", "M66", "M67", "M68", "M69", "M70", "M71", "M72", "M73", "M74", "M75", "M76", "M77", "M78", "M79", "M80", "M81", "M82", "M83", "M84", "M85", "M86", "M87", "M88", "M89", "M90", "M91", "M92", "M93", "M94", "M95", "M96", "M97", "M98", "M99", "M100", "M101", "M102", "M103", "M104", "M105", "M106", "M107", "M108", "M109", "M110"]
 #my_DSO_list = ["M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10"]
+#my_DSO_list = ["M13", "M42", "M43", "M4", "M51", "M100", "M99", "M78", "M81", "M53"]
+
 #my_DSO_list = ["M30"]
 
 class DSO:
 
-  def __init__(self, the_object_name, today, tomorrow):
-    self.the_object_name = str(the_object_name).upper()
+  def __init__(self, dso_name, today, tomorrow):
+    self.the_object_name = str(dso_name).upper()
     self.theDate = today.strftime("%d.%m.%Y")
     self.theDate_american = today.strftime("%Y-%m-%d")
     self.today = today
@@ -163,7 +173,7 @@ class DSO:
       print("Main id: " + str(result_table["main_id"]) + "; " + str(len(result_table["main_id"].pformat())))
     if len(result_table["main_id"].pformat()) == 2:
       if debug:
-        print("DSO " + str(the_object_name) + " not found.")
+        print("DSO " + str(self.the_object_name) + " not found.")
       #sys.exit(0)
       self.object_type = "NONE"
     else:
@@ -346,6 +356,9 @@ class DSO:
     self.visible = False
     self.max_alt, self.max_alt_direction, self.max_alt_time, self.max_alt_during_night, self.max_alt_during_night_direction, self.max_alt_during_night_obstime, self.visible = self.max_altitudes(self.frame_over_night, self.the_objectaltazs_over_night)
 
+    # moon data once it is available
+    self.score_at_max_alt, self.top_score_at_max_alt, self.sub_text_moon_at_max_alt, self.moon_dir_at_max_alt, self.moon_alt_at_max_alt, self.moon_phase_percent_at_max_alt = self.moon_check_at_max_alt()
+
   def max_altitudes(self, frame_over_night, the_objectaltazs_over_night):
     try:
       if debug:
@@ -415,6 +428,42 @@ class DSO:
     except Exception as e:
       print(str(e))
 
+
+  def moon_check_at_max_alt(self):
+    score = False
+    top_score = False
+    sub_text = "    "
+
+    try:
+      moon_rise, moon_set, full_moon, moon_phase, moon_phase_percent, moon_alt, moon_az, moon_dist = sky_utils.moon_data(self.theDate, self.max_alt_time.strftime("%H:%M"))
+      moon_dir = sky_utils.compass_direction(moon_az)
+      if debug:
+        print("  Moon rise: " + str(moon_rise) + " set: " + str(moon_set) + " next full moon: " + str(full_moon) + " phase: " + str(moon_phase) + " (" + str(moon_phase_percent) + " %)")
+        print("  Moon alt " + str(moon_alt) + " az " + str(moon_az) + " dir " + str(moon_dir))
+
+      if float(moon_alt) < 0:
+        msg = "TOP: Moon is below the horizon at " + str(self.max_alt_time.strftime("%d.%m.%Y %H:%M"))
+        if debug:
+          print(msg)
+        score = True
+        top_score = True
+        sub_text += "\n    " + msg
+      if moon_dir != self.max_alt_during_night:
+        msg = "Quite good: Moon dir: " + str(moon_dir) + ", DSO dir: " + str(round(self.max_alt_during_night,0))
+        if debug:
+          print(msg)
+        score = True
+        sub_text += "\n    " + msg
+      if moon_phase_percent < 50:
+        msg = "Quite nice: Moon illumination is below 50 %: " + str(moon_phase_percent) + " %"
+        if debug:
+          print(msg)
+        score = True
+        sub_text += "\n    " + msg
+      return score, top_score, sub_text, moon_dir, moon_alt, moon_phase_percent
+    except Exception as e:
+      print("Moon check error: " + str(e))
+
 def plot(dsolist):
   try:
     plt.clf()
@@ -447,34 +496,11 @@ def plot(dsolist):
           print("##### OK in " + str(dso.max_alt_time.strftime("%m")) + " #####")
           print("DSO " + str(dso.the_object_name) + " appears during the astronomical night. Max. alt " + str(dso_max_alt) + " is reached at " + str(dso.max_alt_time.strftime("%H:%M")))
           print("Astronomical night: " + str(dso.astronomical_night_start.strftime("%H:%M")) + " - " + str(dso.astronomical_night_end.strftime("%H:%M")))
-        sub_text += "\n\n" + str(dso.the_object_name) + " max. altitude " + str(dso_max_alt) + " is reached at " + str(dso.max_alt_time.strftime("%H:%M")) + " in " + str(direction_max_alt_total) + " (" + str(round(az,0)) + ")"
+        sub_text += "\n\n" + str(dso.the_object_name) + " max. altitude " + str(dso_max_alt) + " is reached at " + str(dso.max_alt_time.strftime("%d.%m.%Y %H:%M")) + " in " + str(direction_max_alt_total) + " (" + str(round(az,0)) + ")"
 
         # consider moon phase/illumination/position
-        moon_rise, moon_set, full_moon, moon_phase, moon_phase_percent, moon_alt, moon_az, moon_dist = sky_utils.moon_data(dso.theDate, dso.max_alt_time.strftime("%H:%M"))
-        moon_dir = sky_utils.compass_direction(moon_az)
-        if debug:
-          print("  Moon rise: " + str(moon_rise) + " set: " + str(moon_set) + " next full moon: " + str(full_moon) + " phase: " + str(moon_phase) + " (" + str(moon_phase_percent) + " %)")
-          print("  Moon alt " + str(moon_alt) + " az " + str(moon_az) + " dir " + str(moon_dir))
-
-        if float(moon_alt) < 0:
-          msg = "TOP: Moon is below the horizon at " + str(dso.max_alt_time.strftime("%d.%m.%Y %H:%M"))
-          if debug:
-            print(msg)
-          score = True
-          top_score = True
-          sub_text += "\n" + msg
-        if moon_dir != direction_max_alt_total:
-          msg = "Quite good: Moon dir: " + str(moon_dir) + ", DSO dir: " + str(direction_max_alt_total)
-          if debug:
-            print(msg)
-          score = True
-          sub_text += "\n" + msg
-        if moon_phase_percent < 50:
-          msg = "Quite nice: Moon illumination is below 50 %: " + str(moon_phase_percent) + " %"
-          if debug:
-            print(msg)
-          score = True
-          sub_text += "\n" + msg
+        #score, top_score, sub_text_moon = moon_check(dso, direction_max_alt_total)
+      sub_text += dso.sub_text_moon_at_max_alt
 
       ##############################################################################
       # Make a beautiful figure illustrating nighttime and the altitudes of the DSO and
@@ -488,62 +514,62 @@ def plot(dsolist):
       # https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.scatter.html
       if ".01." in dso.theDate:
         color_code = "#C0C0C0" # silver
-        if score:
+        if dso.score_at_max_alt:
           color_code = "#708090" # SlateGray
       elif ".02." in dso.theDate:
         color_code = "#F0F8FF" # aliceblue
-        if score:
+        if dso.score_at_max_alt:
           color_code = "#00BFFF" # DeepSkyBlue
       elif ".03." in dso.theDate:
         color_code = "#FAEBD7" # linen
-        if score:
+        if dso.score_at_max_alt:
           color_code = "#D2691E" # Chocolate
       elif ".04." in dso.theDate:
         color_code = "#FFEBCD" # blanchedalmond
-        if score:
+        if dso.score_at_max_alt:
           color_code = "#A0522D" # Sienna
       elif ".05." in dso.theDate:
         color_code = "#87CEFA" # lightskyblue
-        if score:
+        if dso.score_at_max_alt:
           color_code = "#4169E1" # RoyalBlue
       elif ".06." in dso.theDate:
         color_code = "#AFEEEE" # PaleTurquoise
-        if score:
+        if dso.score_at_max_alt:
           color_code = "#00CED1" # DarkTurquoise
       elif ".07." in dso.theDate:
         color_code = "#98FB98" # PaleGreen
-        if score:
+        if dso.score_at_max_alt:
           color_code = "#3CB371" # MediumSeaGreen
       elif ".08." in dso.theDate:
         color_code = "#FFA07A" # LightSalmon
-        if score:
+        if dso.score_at_max_alt:
           color_code = "#FFA500" # orange
       elif ".09." in dso.theDate:
         color_code = "#CD5C5C" # indianred
-        if score:
+        if dso.score_at_max_alt:
           color_code = "#DC143C" # crimson
       elif ".10." in dso.theDate:
         color_code = "#D8BFD8" # Thistle
-        if score:
+        if dso.score_at_max_alt:
           color_code = "#9932CC" # darkorchid
       elif ".11." in dso.theDate:
         color_code = "#7B68EE" # mediumslateblue
-        if score:
+        if dso.score_at_max_alt:
           color_code = "#191970" # MidnightBlue
       elif ".12." in dso.theDate:
         color_code = "#E6E6FA" # Lavender
-        if score:
+        if dso.score_at_max_alt:
           color_code = "#4B0082" # indigo
       else:
         color_code = "#FFFACD" # LemonChiffon
-        if score:
+        if dso.score_at_max_alt:
           color_code = "#9ACD32" # yellowgreen
 
       label_text = str(dso.max_alt_time.strftime("%d.%m"))
-      if top_score:
+      if dso.top_score_at_max_alt:
         label_text = str(dso.max_alt_time.strftime("%d.%m")) + " " +  str(dso.max_alt_time.strftime("%H:%M"))
       alpha_value = 1
-      if not top_score:
+      if not dso.top_score_at_max_alt:
         alpha_value = 0.3
       plt.scatter(
           dso.delta_midnight,
@@ -624,6 +650,56 @@ def is_summertime(dt, timeZone):
    aware_dt = timeZone.localize(dt)
    return aware_dt.dst() != datetime.timedelta(0,0)
 
+def sort_DSOs(dso_list):
+  # sort by max. altitude time
+  dsol = sorted(dso_list, key=lambda x: x.max_alt_time)
+  if debug:
+    print("\n\n\n")
+    print("Sorted by max. altitude time:")
+
+  astronomical_night_start, astronomical_night_end = "",""
+  nautical_night_start, nautical_night_end = "", ""
+  astronomical_night_dsos = []
+  nautical_night_dsos = []
+  invisible_dsos = []
+  for dso in dsol:
+    dt = dso.max_alt_time
+    astronomical_night_start = dso.astronomical_night_start
+    astronomical_night_end = dso.astronomical_night_end
+    nautical_night_start = dso.nautical_night_start
+    nautical_night_end = dso.nautical_night_end
+
+    if options.moon:
+      if debug:
+        print("###" + str(dso.score_at_max_alt) + ", " + str(dso.top_score_at_max_alt) + ", " + str(dso.sub_text_moon_at_max_alt))
+
+    if dso.astronomical_night_start < dt < dso.astronomical_night_end:
+      #dso_max_alt = round(max(dso.the_objectaltazs_over_night.alt.value),0)
+      #index_alt_max_total = np.argmax(dso.the_objectaltazs_over_night.alt)
+      #az = dso.the_objectaltazs_over_night.az[index_alt_max_total].value
+      #direction_max_alt_total = sky_utils.compass_direction(az)
+      if debug:
+        print(dso.the_object_name + ": " + str(dso.max_alt) + " in " + str(dso.max_alt_direction) + " at " + str(dso.max_alt_time) + " (astronomical night)")
+      if options.moon:
+        if "TOP" in dso.sub_text_moon_at_max_alt or "Quite" in dso.sub_text_moon_at_max_alt:
+          astronomical_night_dsos.append(dso)
+      else:
+        astronomical_night_dsos.append(dso)
+    elif dso.nautical_night_start < dt < dso.nautical_night_end:
+      if debug:
+        print(dso.the_object_name + ": " + str(dso.max_alt) + " in " + str(dso.max_alt_direction) + " at " + str(dso.max_alt_time) + " (nautical night)")
+      if options.moon:
+        if "TOP" in dso.sub_text_moon_at_max_alt or "Quite" in dso.sub_text_moon_at_max_alt:
+          nautical_night_dsos.append(dso)
+      else:
+        nautical_night_dsos.append(dso)
+    else:
+      invisible_dsos.append(dso)
+  if debug:
+    print("Astronomical night: " + str(astronomical_night_start) + " - " + str(astronomical_night_end))
+    print("Nautical night: " + str(nautical_night_start) + " - " + str(nautical_night_end))
+  return astronomical_night_start, astronomical_night_end, astronomical_night_dsos, nautical_night_start, nautical_night_end, nautical_night_dsos, invisible_dsos
+
 if __name__ == '__main__':
 
   try:
@@ -660,29 +736,54 @@ if __name__ == '__main__':
         for the_month in ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]:
           the_date = "01." + str(the_month) + "." + str(theYear)
           if debug:
-            print("Calculate visibility of " + str(the_object_name) + " at " + str(the_date))
+            print("Calculate visibility of " + str(dso_name) + " at " + str(the_date))
           the_day = today.replace(day=int(1), month=int(the_month), year=int(theYear))
           the_tomorrow = the_day + datetime.timedelta(days=1)
-          dso = DSO(the_object_name, the_day, the_tomorrow)
+          dso = DSO(dso_name, the_day, the_tomorrow)
           dso_list.append(dso)
         plot(dso_list)
       else:
         # loop over all DSOs
-        for thedso in my_DSO_list:
-          the_object_name = thedso
+        for dso_name in my_DSO_list:
           dso_list = []
           # loop over 12 dates/year
           for the_month in ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]:
             the_date = "01." + str(the_month) + "." + str(theYear)
             if debug:
-              print("Calculate visibility of " + str(the_object_name) + " at " + str(the_date))
+              print("Calculate visibility of " + str(dso_name) + " at " + str(the_date))
             the_day = today.replace(day=int(1), month=int(the_month), year=int(theYear))
             the_tomorrow = the_day + datetime.timedelta(days=1)
-            dso = DSO(the_object_name, the_day, the_tomorrow)
+            dso = DSO(dso_name, the_day, the_tomorrow)
             dso_list.append(dso)
           #print(dso_list)
           plot(dso_list)
+    elif options.tonight:
+      print("Find best DSOs for tonight, ordered by their max. altitude...")
+      dso_list = []
+      for dso_name in my_DSO_list:
+        dso = DSO(dso_name, today, tomorrow)
+        dso_list.append(dso)
+      astronomical_night_start, astronomical_night_end, astronomical_night_dsos, nautical_night_start, nautical_night_end, nautical_night_dsos, invisible_dsos = sort_DSOs(dso_list)
+
+      print("Nautical night: " + str(nautical_night_start.strftime("%d.%m.%Y %H:%M")) + " - " + str(nautical_night_end.strftime("%d.%m.%Y %H:%M")))
+      for ndso in nautical_night_dsos:
+        msg = "  " + ndso.the_object_name + ": " + str(round(ndso.max_alt,0)) + " in " + str(ndso.max_alt_direction) + " at " + str(ndso.max_alt_time.strftime("%H:%M")) # + " (nautical night)")
+        if options.moon:
+          msg += ndso.sub_text_moon_at_max_alt
+        print(msg)
+
+      print("Astronomical night: " + str(astronomical_night_start.strftime("%d.%m.%Y %H:%M")) + " - " + str(astronomical_night_end.strftime("%d.%m.%Y %H:%M")))
+      for asdso in astronomical_night_dsos:
+        msg = "  " + asdso.the_object_name + ": " + str(round(asdso.max_alt,0)) + " in " + str(asdso.max_alt_direction) + " at " + str(asdso.max_alt_time.strftime("%H:%M")) # + " (astronomical night)")
+        if options.moon:
+          msg += ndso.sub_text_moon_at_max_alt
+        print(msg)
+
+      if len(invisible_dsos)>0:
+        print("Invisible DSOs:")
+        for idso in invisible_dsos:
+          print("  " + idso.the_object_name + ": " + str(round(idso.max_alt,0)) + " in " + str(idso.max_alt_direction) + " at " + str(idso.max_alt_time.strftime("%H:%M")))
 
   except Exception as e:
-    print("DSO observation planning error " + str(the_object_name) + ": " + str(e))
+    print("DSO observation planning error " + str(dso_name) + ": " + str(e))
   sys.exit(0)
