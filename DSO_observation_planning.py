@@ -82,7 +82,9 @@ parser.add_option('-t', '--tonight',
 parser.add_option('-m', '--moon',
     action="store_true", dest="moon",
     help="Consider moon (illumination, location) during tonights checks.", default=False)
-
+parser.add_option('-j', '--justthetopones',
+    action="store_true", dest="justthetopones",
+    help="Check visibility of DSOs tonight to find best time, consider the TOP ones only (requires tonight and moon option)", default=False)
 
 options, args = parser.parse_args()
 
@@ -682,16 +684,24 @@ def sort_DSOs(dso_list):
         if debug:
           print(dso.the_object_name + ": " + str(dso.max_alt) + " in " + str(dso.max_alt_direction) + " at " + str(dso.max_alt_time) + " (astronomical night)")
         if options.moon:
-          if "TOP" in dso.sub_text_moon_at_max_alt or "Quite" in dso.sub_text_moon_at_max_alt:
-            astronomical_night_dsos.append(dso)
+          if options.justthetopones:
+            if "TOP" in dso.sub_text_moon_at_max_alt:
+              astronomical_night_dsos.append(dso)
+          else:
+            if "TOP" in dso.sub_text_moon_at_max_alt or "Quite" in dso.sub_text_moon_at_max_alt:
+              astronomical_night_dsos.append(dso)
         else:
           astronomical_night_dsos.append(dso)
       elif dso.nautical_night_start < dt < dso.nautical_night_end:
         if debug:
           print(dso.the_object_name + ": " + str(dso.max_alt) + " in " + str(dso.max_alt_direction) + " at " + str(dso.max_alt_time) + " (nautical night)")
         if options.moon:
-          if "TOP" in dso.sub_text_moon_at_max_alt or "Quite" in dso.sub_text_moon_at_max_alt:
-            nautical_night_dsos.append(dso)
+          if options.justthetopones:
+            if "TOP" in dso.sub_text_moon_at_max_alt:
+              nautical_night_dsos.append(dso)
+          else:
+            if "TOP" in dso.sub_text_moon_at_max_alt or "Quite" in dso.sub_text_moon_at_max_alt:
+              nautical_night_dsos.append(dso)
         else:
           nautical_night_dsos.append(dso)
     else:
