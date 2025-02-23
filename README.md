@@ -428,6 +428,12 @@ Invisible DSOs:
   M30: -6.0 in ESE at 06:06
 ```
 
+
+The additional option --justthetopones allows to look at the TOP DSOs of that night only:
+```
+python3 DSO_observation_planning.py --tonight --moon --justthetopones
+```
+
 ## Blog
 
 [https://thisisyetanotherblog.wordpress.com/2025/02/22/astrophotography-what-is-the-best-time-to-observe-my-favourite-deep-sky-object/](https://thisisyetanotherblog.wordpress.com/2025/02/22/astrophotography-what-is-the-best-time-to-observe-my-favourite-deep-sky-object/)
