@@ -239,9 +239,6 @@ Nautical night: 23.02.2025 19:09 - 24.02.2025 06:06
   M29: 52.0 in E at 06:06
     Quite good: Moon dir: SE, DSO dir: 78.0
     Quite nice: Moon illumination is below 50 %: 25.86 %
-  M30: -6.0 in ESE at 06:06
-    Quite good: Moon dir: SE, DSO dir: 17.0
-    Quite nice: Moon illumination is below 50 %: 25.86 %
   M39: 47.0 in ENE at 06:06
     Quite good: Moon dir: SE, DSO dir: 88.0
     Quite nice: Moon illumination is below 50 %: 25.86 %
@@ -432,4 +429,6 @@ Astronomical night: 23.02.2025 19:47 - 24.02.2025 05:29
   M80: 17.0 in S at 05:27
     Quite good: Moon dir: SE, DSO dir: 83.0
     Quite nice: Moon illumination is below 50 %: 25.86 %
+ Invisible DSOs:
+  M30: -6.0 in ESE at 06:06
 ```
