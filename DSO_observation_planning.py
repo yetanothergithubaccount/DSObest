@@ -85,12 +85,18 @@ parser.add_option('-m', '--moon',
     help="Consider moon (illumination, location) during tonights checks.", default=False)
 parser.add_option('-j', '--justthetopones',
     action="store_true", dest="justthetopones",
-    help="Check visibility of DSOs tonight to find best time, consider the TOP ones only (requires tonight and moon option),", default=False)
+    help="Check visibility of DSOs tonight to find best time, consider the TOP ones only (requires tonight and moon option).", default=False)
 parser.add_option('-r', '--direction',
     action="store", dest="direction",
     help="Filter tonight's best results for a certain direction (requires tonight and moon option).") # S/W/N/E
 
 options, args = parser.parse_args()
+
+if debug:
+  print("Find best tonight's DSOs: " + str(options.tonight))
+  print("Consider moon: " + str(options.moon))
+  print("  display only the TOP ones: " + str(options.justthetopones))
+  print("  filter for direction: " + str(options.direction))
 
 if options.latitude:
   latitude = options.latitude
@@ -690,20 +696,20 @@ def sort_DSOs(dso_list):
         if options.moon:
           if options.justthetopones:
             if "TOP" in dso.sub_text_moon_at_max_alt:
-              if str(options.direction) != None:
+              if options.direction != None:
                 if str(options.direction) in str(dso.max_alt_direction):
                   astronomical_night_dsos.append(dso)
               else:
                 astronomical_night_dsos.append(dso)
           else:
             if "TOP" in dso.sub_text_moon_at_max_alt or "Quite" in dso.sub_text_moon_at_max_alt:
-              if str(options.direction) != None:
+              if options.direction != None:
                 if str(options.direction) in str(dso.max_alt_direction):
                   astronomical_night_dsos.append(dso)
               else:
                 astronomical_night_dsos.append(dso)
         else:
-          if str(options.direction) != None:
+          if options.direction != None:
             if str(options.direction) in str(dso.max_alt_direction):
               astronomical_night_dsos.append(dso)
           else:
@@ -714,20 +720,20 @@ def sort_DSOs(dso_list):
         if options.moon:
           if options.justthetopones:
             if "TOP" in dso.sub_text_moon_at_max_alt:
-              if str(options.direction) != None :
+              if options.direction != None :
                 if str(options.direction) in str(dso.max_alt_direction):
                   nautical_night_dsos.append(dso)
               else:
                 nautical_night_dsos.append(dso)
           else:
             if "TOP" in dso.sub_text_moon_at_max_alt or "Quite" in dso.sub_text_moon_at_max_alt:
-              if str(options.direction) != None:
+              if options.direction != None:
                 if str(options.direction) in str(dso.max_alt_direction):
                   nautical_night_dsos.append(dso)
               else:
                 nautical_night_dsos.append(dso)
         else:
-          if str(options.direction) != None:
+          if options.direction != None:
             if str(options.direction) in str(dso.max_alt_direction):
               nautical_night_dsos.append(dso)
           else:
@@ -805,26 +811,40 @@ if __name__ == '__main__':
         dso = DSO(dso_name, today, tomorrow)
         dso_list.append(dso)
 
+      result_msg = " Best DSOs for " + str(today.strftime("%d.%m.") + " - " + str(tomorrow.strftime("%d.%m.%Y")))
+
       astronomical_night_start, astronomical_night_end, astronomical_night_dsos, nautical_night_start, nautical_night_end, nautical_night_dsos, invisible_dsos = sort_DSOs(dso_list)
 
-      print("Nautical night: " + str(nautical_night_start.strftime("%d.%m.%Y %H:%M")) + " - " + str(nautical_night_end.strftime("%d.%m.%Y %H:%M")))
+      msg = "\n\nNautical night: " + str(nautical_night_start.strftime("%d.%m.%Y %H:%M")) + " - " + str(nautical_night_end.strftime("%d.%m.%Y %H:%M"))
+      print(len(nautical_night_dsos))
+      print(msg)
+      result_msg += msg
       for ndso in nautical_night_dsos:
         msg = "  " + ndso.the_object_name + ": " + str(round(ndso.max_alt,0)) + " in " + str(ndso.max_alt_direction) + " at " + str(ndso.max_alt_time.strftime("%H:%M")) # + " (nautical night)")
         if options.moon:
-          msg += ndso.sub_text_moon_at_max_alt
+          msg += "\n" + str(ndso.sub_text_moon_at_max_alt)
         print(msg)
+        result_msg += msg
 
-      print("Astronomical night: " + str(astronomical_night_start.strftime("%d.%m.%Y %H:%M")) + " - " + str(astronomical_night_end.strftime("%d.%m.%Y %H:%M")))
+      msg = "\n\nAstronomical night: " + str(astronomical_night_start.strftime("%d.%m.%Y %H:%M")) + " - " + str(astronomical_night_end.strftime("%d.%m.%Y %H:%M"))
+      print(len(astronomical_night_dsos))
+      print(msg)
+      result_msg += msg
       for asdso in astronomical_night_dsos:
         msg = "  " + asdso.the_object_name + ": " + str(round(asdso.max_alt,0)) + " in " + str(asdso.max_alt_direction) + " at " + str(asdso.max_alt_time.strftime("%H:%M")) # + " (astronomical night)")
         if options.moon:
-          msg += ndso.sub_text_moon_at_max_alt
+          msg += "\n" + str(asdso.sub_text_moon_at_max_alt)
         print(msg)
+        result_msg += msg
 
       if len(invisible_dsos)>0:
-        print("Invisible DSOs:")
+        msg = "\n\nInvisible DSOs:"
+        print(msg)
+        result_msg += msg
         for idso in invisible_dsos:
-          print("  " + idso.the_object_name + ": " + str(round(idso.max_alt,0)) + " in " + str(idso.max_alt_direction) + " at " + str(idso.max_alt_time.strftime("%H:%M")))
+          msg = "  " + idso.the_object_name + ": " + str(round(idso.max_alt,0)) + " in " + str(idso.max_alt_direction) + " at " + str(idso.max_alt_time.strftime("%H:%M"))
+        print(msg)
+        result_msg += msg
 
   except Exception as e:
     print("DSO observation planning error " + str(dso_name) + ": " + str(e))
