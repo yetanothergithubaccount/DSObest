@@ -433,6 +433,6 @@ Astronomical night: 23.02.2025 19:47 - 24.02.2025 05:29
   M30: -6.0 in ESE at 06:06
 ```
 
-##Blog
+## Blog
 ![https://thisisyetanotherblog.wordpress.com/2025/02/22/astrophotography-what-is-the-best-time-to-observe-my-favourite-deep-sky-object/](https://thisisyetanotherblog.wordpress.com/2025/02/22/astrophotography-what-is-the-best-time-to-observe-my-favourite-deep-sky-object/)
 ![https://thisisyetanotherblog.wordpress.com/2025/02/23/astrophotography-whats-on-the-sky-tonight/](https://thisisyetanotherblog.wordpress.com/2025/02/23/astrophotography-whats-on-the-sky-tonight/)
