@@ -85,10 +85,10 @@ parser.add_option('-m', '--moon',
     help="Consider moon (illumination, location) during tonights checks.", default=False)
 parser.add_option('-j', '--justthetopones',
     action="store_true", dest="justthetopones",
-    help="Check visibility of DSOs tonight to find best time, consider the TOP ones only (requires tonight and moon option)", default=False)
+    help="Check visibility of DSOs tonight to find best time, consider the TOP ones only (requires tonight and moon option),", default=False)
 parser.add_option('-r', '--direction',
     action="store", dest="direction",
-    help="Filter tonight's best results for a certain direction.") # S/W/N/E
+    help="Filter tonight's best results for a certain direction (requires tonight and moon option).") # S/W/N/E
 
 options, args = parser.parse_args()
 
