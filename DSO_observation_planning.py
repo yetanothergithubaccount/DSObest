@@ -73,7 +73,7 @@ parser.add_option('-l', '--location',
 parser.add_option('-f', '--debug',
     action="store_true", dest="debug",
     help="Debug mode", default=False)
-parser.add_option('-t', '--message',
+parser.add_option('-n', '--message',
     action="store_true", dest="message",
     help="Send results message", default=False)
 
