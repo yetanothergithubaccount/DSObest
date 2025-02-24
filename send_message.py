@@ -6,6 +6,7 @@ Send a message
 @author: solveigh
 """
 
+
 debug = False
 
 
@@ -14,8 +15,15 @@ def text(message):
     msg = "Send message " + str(message) + " synchronously..."
     if debug:
       print(msg)
+    # TODO implement your own
+  except Exception as e:
+    print(e)
 
-    # TODO implement this on your own
-
+def image(path_name):
+  try:
+    msg = "Send image " + str(path_name) + " synchronously..."
+    if debug:
+      print(msg)
+    # TODO implement your own
   except Exception as e:
     print(e)
