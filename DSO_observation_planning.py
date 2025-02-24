@@ -128,7 +128,7 @@ if options.debug:
 my_DSO_list = ["M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10", "M11", "M12", "M13", "M14", "M15", "M16", "M17", "M18", "M19", "M20", "M21", "M22", "M23", "M24", "M25", "M26", "M27", "M28", "M29", "M30", "M31", "M32", "M33", "M34", "M35", "M36", "M37", "M38", "M39", "M40", "M41", "M42", "M43", "M44", "M45", "M46", "M47", "M48", "M49", "M50", "M51", "M52", "M53", "M54", "M55", "M56", "M57", "M58", "M59", "M60", "M61", "M62", "M63", "M64", "M65", "M66", "M67", "M68", "M69", "M70", "M71", "M72", "M73", "M74", "M75", "M76", "M77", "M78", "M79", "M80", "M81", "M82", "M83", "M84", "M85", "M86", "M87", "M88", "M89", "M90", "M91", "M92", "M93", "M94", "M95", "M96", "M97", "M98", "M99", "M100", "M101", "M102", "M103", "M104", "M105", "M106", "M107", "M108", "M109", "M110", "NGC7822", "SH2-173", "NGC210", "IC63", "SH2-188", "NGC613", "NGC660", "NGC672", "NGC918", "IC1795", "IC1805", "NGC1055", "IC1848", "SH2-200", "NGC1350", "NGC1499", "LBN777", "NGC1532", "LDN1495", "NGC1555", "NGC1530", "NGC1624", "NGC1664", "Melotte15", "vdb31", "NGC1721", "IC2118", "IC410", "SH2-223", "SH2-224", "IC434", "SH2-240", "LDN1622", "SH2-261", "SH2-254", "NGC2202", "IC443", "NGC2146", "NGC2217", "NGC2245", "SH2-308", "NGC2327", "SH2-301", "Abell21", "NGC2835", "Abell33", "NGC2976","Arp316", "NGC3359", "Arp214", "NGC4395", "NGC4535", "Abell35", "NGC5068", "NGC5297", "NGC5371", "NGC5364", "NGC5634", "NGC5701", "NGC5963", "NGC5982", "IC4592", "IC4628", "Barnard59", "SH2-003", "Barnard252", "NGC6334", "NGC6357", "Barnard75", "NGC6384", "SH2-54", "vdb126", "SH2-82", "NGC6820", "SH2-101", "WR134", "LBN331", "LBN325", "SH2-112", "SH2-115", "LBN468", "IC5070", "vdb141", "SH2-114", "vdb152", "SH2-132", "Arp319", "NGC7497", "SH2-157", "NGC7606", "Abell85", "LBN 564", "SH2-170", "LBN603", "LBN639", "LBN640", "LDN1333", "NGC1097", "LBN762", "SH2-202", "vdb14", "vdb15", "LDN1455", "vdb13", "vdb16", "IC348", "SH2-205", "SH2-204", "Barnard208", "Barnard7", "vdb27", "Barnard8", "Barnard18", "SH2-216", "Abell7", "SH2-263", "SH2-265", "SH2-232", "Barnard35", "SH2-249", "IC447", "SH2-280", "SH2-282", "SH2-304", "SH2-284", "LBN1036", "NGC2353", "SH2-310", "SH2-302", "Gum14", "Gum15", "Gum17", "Abell31", "SH2-1", "SH2-273", "SH2-46", "SH2-34", "IC4685", "SH2-91", "Barnard147", "IC1318", "LBN380", "Barnard150", "LBN552", "SH2-119", "SH2-124", "Barnard169", "LBN420", "SH2-134", "SH2-150", "LDN1251", "LBN438", "SH2-154", "LDN1218", "SH2-160", "SH2-122", "LBN575", "LDN1262", "LBN534", "vdb158", "NGC7380", "NGC6543", "NGC2264", "NGC474", "NGC246", "NGC7479", "NGC7741", "IC5068", "SH2-155", "NGC7008", "NGC4676A", "NGC4536", "NGC2403", "IC11", "NGC2359", "IC5067", "NGC281", "IC44", "NGC6992", "NGC7293", "NGC6960", "IC4703", "NGC6618", "NGC6826", "NGC7662"]
 #my_DSO_list = ["M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10", "M11", "M12", "M13", "M14", "M15", "M16", "M17", "M18", "M19", "M20", "M21", "M22", "M23", "M24", "M25", "M26", "M27", "M28", "M29", "M30", "M31", "M32", "M33", "M34", "M35", "M36", "M37", "M38", "M39", "M40", "M41", "M42", "M43", "M44", "M45", "M46", "M47", "M48", "M49", "M50", "M51", "M52", "M53", "M54", "M55", "M56", "M57", "M58", "M59", "M60", "M61", "M62", "M63", "M64", "M65", "M66", "M67", "M68", "M69", "M70", "M71", "M72", "M73", "M74", "M75", "M76", "M77", "M78", "M79", "M80", "M81", "M82", "M83", "M84", "M85", "M86", "M87", "M88", "M89", "M90", "M91", "M92", "M93", "M94", "M95", "M96", "M97", "M98", "M99", "M100", "M101", "M102", "M103", "M104", "M105", "M106", "M107", "M108", "M109", "M110"]
 #my_DSO_list = ["M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10"]
-my_DSO_list = ["M13", "M42", "M43", "M4", "M51", "M100", "M99", "M78", "M81", "M53"]
+#my_DSO_list = ["M13", "M42", "M43", "M4", "M51", "M100", "M99", "M78", "M81", "M53"]
 
 #my_DSO_list = ["M30"]
 
@@ -140,6 +140,7 @@ class DSO:
     self.theDate_american = today.strftime("%Y-%m-%d")
     self.today = today
     self.tomorrow = tomorrow
+    self.tomorrow_american = tomorrow.strftime("%Y-%m-%d")
 
     if debug:
       print("Today: " + str(self.today))
@@ -332,7 +333,7 @@ class DSO:
     # Find the alt,az coordinates of the object at 100 times evenly spaced between 10pm
     # and 7am EDT:
     # +1: otherwise the dso graph does not match the x-axis ticks
-    self.midnight = Time(str(self.theDate_american) + " 23:59:00") - utcoffset
+    self.midnight = Time(str(self.tomorrow_american) + " 00:00:00") - utcoffset
     #self.delta_midnight = np.linspace(-2, 10, 100) * u.hour
     self.delta_midnight = np.linspace(-12, 12, 1000) * u.hour
     self.frame_night = AltAz(obstime=self.midnight + self.delta_midnight, location=the_location)
@@ -765,6 +766,7 @@ if __name__ == '__main__':
     theDate_today = now.strftime("%Y-%m-%d")
 
     timeZone = pytz.timezone(config.coordinates["timezone"])
+    # MEZ assumed (UTC+1/2)
     if is_summertime(now, timeZone):
       utcoffset = +2 * u.hour  # +2 summertime, +1 wintertime
       if debug:
