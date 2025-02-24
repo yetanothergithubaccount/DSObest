@@ -403,7 +403,7 @@ class DSO:
 
       if len(dso_in_the_dark_alt)>0:
         dso_in_the_dark_alt_max = max(dso_in_the_dark_alt)
-        index_alt_max = dso_in_the_dark_alt.index(max(dso_in_the_dark_alt)) #np.argmax(dso_in_the_dark_alt)
+        index_alt_max = dso_in_the_dark_alt.index(dso_in_the_dark_alt_max) #np.argmax(dso_in_the_dark_alt)
         if debug:
           print("max: " + str(dso_in_the_dark_alt_max) + " at " + str(dso_in_the_dark_ot[index_alt_max]))
 
@@ -458,20 +458,20 @@ class DSO:
         print("  Moon alt " + str(moon_alt) + " az " + str(moon_az) + " dir " + str(moon_dir))
 
       if float(moon_alt) < 0:
-        msg = "TOP: Moon is below the horizon at " + str(self.max_alt_time.strftime("%d.%m.%Y %H:%M"))
+        msg = "TOP: Moon < the horizon at " + str(self.max_alt_time.strftime("%d.%m. %H:%M"))
         if debug:
           print(msg)
         score = True
         top_score = True
         sub_text += "\n    " + msg
       if moon_dir != self.max_alt_direction:
-        msg = "Quite good: Moon dir: " + str(moon_dir) + " (" + str(round(moon_az,0)) + ") " + ", DSO dir: " + str(self.max_alt_direction) + " (" + str(round(self.max_alt_az,0)) + ")"
+        msg = "OK: Dir moon: " + str(moon_dir) + " (" + str(round(moon_az,0)) + ") " + ", DSO: " + str(self.max_alt_direction) + " (" + str(round(self.max_alt_az,0)) + ")"
         if debug:
           print(msg)
         score = True
         sub_text += "\n    " + msg
       if moon_phase_percent < 50:
-        msg = "Quite nice: Moon illumination is below 50 %: " + str(moon_phase_percent) + " %"
+        msg = "Nice: Moon illumination < 50 %: " + str(moon_phase_percent) + " %"
         if debug:
           print(msg)
         score = True
@@ -706,7 +706,7 @@ def sort_DSOs(dso_list):
               else:
                 astronomical_night_dsos.append(dso)
           else:
-            if "TOP" in dso.sub_text_moon_at_max_alt or "Quite" in dso.sub_text_moon_at_max_alt:
+            if "TOP" in dso.sub_text_moon_at_max_alt or "OK" in dso.sub_text_moon_at_max_alt:
               if options.direction != None:
                 if str(options.direction) in str(dso.max_alt_direction):
                   astronomical_night_dsos.append(dso)
@@ -730,7 +730,7 @@ def sort_DSOs(dso_list):
               else:
                 nautical_night_dsos.append(dso)
           else:
-            if "TOP" in dso.sub_text_moon_at_max_alt or "Quite" in dso.sub_text_moon_at_max_alt:
+            if "TOP" in dso.sub_text_moon_at_max_alt or "OK" in dso.sub_text_moon_at_max_alt:
               if options.direction != None:
                 if str(options.direction) in str(dso.max_alt_direction):
                   nautical_night_dsos.append(dso)
@@ -815,11 +815,11 @@ if __name__ == '__main__':
         dso = DSO(dso_name, today, tomorrow)
         dso_list.append(dso)
 
-      result_msg = " Best DSOs for " + str(today.strftime("%d.%m.") + " - " + str(tomorrow.strftime("%d.%m.%Y")))
+      result_msg = "Best DSOs for " + str(today.strftime("%d.%m.Y") + " - " + str(tomorrow.strftime("%d.%m.%Y")))
 
       astronomical_night_start, astronomical_night_end, astronomical_night_dsos, nautical_night_start, nautical_night_end, nautical_night_dsos, invisible_dsos = sort_DSOs(dso_list)
 
-      msg = "\n\nNautical night: " + str(nautical_night_start.strftime("%d.%m.%Y %H:%M")) + " - " + str(nautical_night_end.strftime("%d.%m.%Y %H:%M"))
+      msg = "\n\nNautical night: " + str(nautical_night_start.strftime("%d.%m.%y %H:%M")) + " - " + str(nautical_night_end.strftime("%d.%m.%y %H:%M"))
       if debug:
         print("# DSOs in nautical night: " + str(len(nautical_night_dsos)))
       print(msg)
@@ -831,7 +831,7 @@ if __name__ == '__main__':
         print(msg)
         result_msg += msg
 
-      msg = "\n\nAstronomical night: " + str(astronomical_night_start.strftime("%d.%m.%Y %H:%M")) + " - " + str(astronomical_night_end.strftime("%d.%m.%Y %H:%M"))
+      msg = "\n\nAstronomical night: " + str(astronomical_night_start.strftime("%d.%m.%y %H:%M")) + " - " + str(astronomical_night_end.strftime("%d.%m.%y %H:%M"))
       if debug:
         print("# DSOs in astronomical night: " + str(len(astronomical_night_dsos)))
       print(msg)
@@ -845,14 +845,15 @@ if __name__ == '__main__':
 
       if debug:
         print("# Invisible DSOs: " + str(len(invisible_dsos)))
-      #if len(invisible_dsos)>0:
+
       msg = "\n\nInvisible DSOs:"
       print(msg)
       result_msg += msg
-      for idso in invisible_dsos:
-        msg = "\n  " + idso.the_object_name + ": " + str(round(idso.max_alt,0)) + " in " + str(idso.max_alt_direction) + " at " + str(idso.max_alt_time.strftime("%H:%M"))
-      print(msg)
-      result_msg += msg
+      if len(invisible_dsos)>0:
+        for idso in invisible_dsos:
+          msg = "\n  " + idso.the_object_name + ": " + str(round(idso.max_alt,0)) + " in " + str(idso.max_alt_direction) + " at " + str(idso.max_alt_time.strftime("%H:%M"))
+        print(msg)
+        result_msg += msg
 
       if options.message:
         if debug:
