@@ -10,6 +10,8 @@ Some DSOs found in catalogues like
 - Orphaned Beauties: https://www.astrobin.com/in2ev8/
 - Faint Giants: https://www.astrobin.com/0unmpq/
 
+- https://en.wikipedia.org/wiki/Caldwell_catalogue
+
 python3 DSO_observation_planning.py --dso M31 --best # find best time and date to observe M31
 
 python3 DSO_observation_planning.py --best
@@ -136,12 +138,28 @@ theDate = today.strftime("%d.%m.%Y")
 if options.debug:
   debug = True
 
+# Solveigh's list of DSOs in northern hemisphere
 my_DSO_list = ["M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10", "M11", "M12", "M13", "M14", "M15", "M16", "M17", "M18", "M19", "M20", "M21", "M22", "M23", "M24", "M25", "M26", "M27", "M28", "M29", "M30", "M31", "M32", "M33", "M34", "M35", "M36", "M37", "M38", "M39", "M40", "M41", "M42", "M43", "M44", "M45", "M46", "M47", "M48", "M49", "M50", "M51", "M52", "M53", "M54", "M55", "M56", "M57", "M58", "M59", "M60", "M61", "M62", "M63", "M64", "M65", "M66", "M67", "M68", "M69", "M70", "M71", "M72", "M73", "M74", "M75", "M76", "M77", "M78", "M79", "M80", "M81", "M82", "M83", "M84", "M85", "M86", "M87", "M88", "M89", "M90", "M91", "M92", "M93", "M94", "M95", "M96", "M97", "M98", "M99", "M100", "M101", "M102", "M103", "M104", "M105", "M106", "M107", "M108", "M109", "M110", "NGC7822", "SH2-173", "NGC210", "IC63", "SH2-188", "NGC613", "NGC660", "NGC672", "NGC918", "IC1795", "IC1805", "NGC1055", "IC1848", "SH2-200", "NGC1350", "NGC1499", "LBN777", "NGC1532", "LDN1495", "NGC1555", "NGC1530", "NGC1624", "NGC1664", "Melotte15", "vdb31", "NGC1721", "IC2118", "IC410", "SH2-223", "SH2-224", "IC434", "SH2-240", "LDN1622", "SH2-261", "SH2-254", "NGC2202", "IC443", "NGC2146", "NGC2217", "NGC2245", "SH2-308", "NGC2327", "SH2-301", "Abell21", "NGC2835", "Abell33", "NGC2976","Arp316", "NGC3359", "Arp214", "NGC4395", "NGC4535", "Abell35", "NGC5068", "NGC5297", "NGC5371", "NGC5364", "NGC5634", "NGC5701", "NGC5963", "NGC5982", "IC4592", "IC4628", "Barnard59", "SH2-003", "Barnard252", "NGC6334", "NGC6357", "Barnard75", "NGC6384", "SH2-54", "vdb126", "SH2-82", "NGC6820", "SH2-101", "WR134", "LBN331", "LBN325", "SH2-112", "SH2-115", "LBN468", "IC5070", "vdb141", "SH2-114", "vdb152", "SH2-132", "Arp319", "NGC7497", "SH2-157", "NGC7606", "Abell85", "LBN 564", "SH2-170", "LBN603", "LBN639", "LBN640", "LDN1333", "NGC1097", "LBN762", "SH2-202", "vdb14", "vdb15", "LDN1455", "vdb13", "vdb16", "IC348", "SH2-205", "SH2-204", "Barnard208", "Barnard7", "vdb27", "Barnard8", "Barnard18", "SH2-216", "Abell7", "SH2-263", "SH2-265", "SH2-232", "Barnard35", "SH2-249", "IC447", "SH2-280", "SH2-282", "SH2-304", "SH2-284", "LBN1036", "NGC2353", "SH2-310", "SH2-302", "Gum14", "Gum15", "Gum17", "Abell31", "SH2-1", "SH2-273", "SH2-46", "SH2-34", "IC4685", "SH2-91", "Barnard147", "IC1318", "LBN380", "Barnard150", "LBN552", "SH2-119", "SH2-124", "Barnard169", "LBN420", "SH2-134", "SH2-150", "LDN1251", "LBN438", "SH2-154", "LDN1218", "SH2-160", "SH2-122", "LBN575", "LDN1262", "LBN534", "vdb158", "NGC7380", "NGC6543", "NGC2264", "NGC474", "NGC246", "NGC7479", "NGC7741", "IC5068", "SH2-155", "NGC7008", "NGC4676A", "NGC4536", "NGC2403", "IC11", "NGC2359", "IC5067", "NGC281", "IC44", "NGC6992", "NGC7293", "NGC6960", "IC4703", "NGC6618", "NGC6826", "NGC7662"]
-#my_DSO_list = ["M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10", "M11", "M12", "M13", "M14", "M15", "M16", "M17", "M18", "M19", "M20", "M21", "M22", "M23", "M24", "M25", "M26", "M27", "M28", "M29", "M30", "M31", "M32", "M33", "M34", "M35", "M36", "M37", "M38", "M39", "M40", "M41", "M42", "M43", "M44", "M45", "M46", "M47", "M48", "M49", "M50", "M51", "M52", "M53", "M54", "M55", "M56", "M57", "M58", "M59", "M60", "M61", "M62", "M63", "M64", "M65", "M66", "M67", "M68", "M69", "M70", "M71", "M72", "M73", "M74", "M75", "M76", "M77", "M78", "M79", "M80", "M81", "M82", "M83", "M84", "M85", "M86", "M87", "M88", "M89", "M90", "M91", "M92", "M93", "M94", "M95", "M96", "M97", "M98", "M99", "M100", "M101", "M102", "M103", "M104", "M105", "M106", "M107", "M108", "M109", "M110"]
+
+# Messier catalogue
+my_DSO_list = ["M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10", "M11", "M12", "M13", "M14", "M15", "M16", "M17", "M18", "M19", "M20", "M21", "M22", "M23", "M24", "M25", "M26", "M27", "M28", "M29", "M30", "M31", "M32", "M33", "M34", "M35", "M36", "M37", "M38", "M39", "M40", "M41", "M42", "M43", "M44", "M45", "M46", "M47", "M48", "M49", "M50", "M51", "M52", "M53", "M54", "M55", "M56", "M57", "M58", "M59", "M60", "M61", "M62", "M63", "M64", "M65", "M66", "M67", "M68", "M69", "M70", "M71", "M72", "M73", "M74", "M75", "M76", "M77", "M78", "M79", "M80", "M81", "M82", "M83", "M84", "M85", "M86", "M87", "M88", "M89", "M90", "M91", "M92", "M93", "M94", "M95", "M96", "M97", "M98", "M99", "M100", "M101", "M102", "M103", "M104", "M105", "M106", "M107", "M108", "M109", "M110"]
+
+# CALDWELL catalogue
+#my_DSO_list = ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10", "C11", "C12", "C13", "C14", "C15", "C16", "C17", "C18", "C19", "C20", "C21", "C22", "C23", "C24", "C25", "C26", "C27", "C28", "C29", "C30", "C31", "C32", "C33", "C34", "C35", "C36", "C37", "C38", "C39", "C40", "C41", "C42", "C43", "C44", "C45", "C46", "C47", "C48", "C49", "C50", "C51", "C52", "C53", "C54", "C55", "C56", "C57", "C58", "C59", "C60", "C61", "C62", "C63", "C64", "C65", "C66", "C67", "C68", "C69", "C70", "C71", "C72", "C73", "C74", "C75", "C76", "C77", "C78", "C79", "C80", "C81", "C82", "C83", "C84", "C85", "C86", "C87", "C88", "C89", "C90", "C91", "C92", "C93", "C94", "C95", "C96", "C97", "C98", "C99", "C100", "C101", "C102", "C103", "C104", "C105", "C106", "C107", "C108", "C109"]
+# CALD14.NGC 869/884 NGC 6992/5 CALD49.NGC 2237-9 C41.HYADES C99,COALSACK
+my_DSO_list = ["NGC 188", "NGC 40", "NGC 4236", "NGC 7023", "IC 342", "NGC 6543", "NGC 2403", "NGC 559", "SH2-155", "NGC 663", "NGC 7635", "NGC 6946", "NGC 457", "NGC 869",
+               "NGC 6826", "NGC 7243", "NGC 147", "NGC 185", "IC 5146", "NGC 7000", "NGC 4449", "NGC 7662", "NGC 1275", "NGC 2419", "NGC 4244", "NGC 6888", "NGC 752", "NGC 5005",
+               "NGC 7331","IC 405", "NGC 4631", "NGC 6992", "NGC 6960", "NGC 4889", "NGC 4559", "NGC 6885", "NGC 4565", "NGC 2392", "NGC 3626", "HYADES", "NGC 7006", "NGC 7814",
+               "NGC 7479", "NGC 5248", "NGC 2261", "NGC 6934", "NGC 2775", "NGC 2238", "NGC 2244", "IC 1613", "NGC 4697", "NGC 3115", "NGC 2506", "NGC 7009", "NGC 246",
+               "NGC 6822", "NGC 2360", "NGC 3242", "NGC 4038", "NGC 4039", "NGC 247", "NGC 7293", "NGC 2362", "NGC 253", "NGC 5694", "NGC 1097", "NGC 6729", "NGC 6302",
+               "NGC 300", "NGC 2477", "NGC 55", "NGC 1851", "NGC 3132", "NGC 6124", "NGC 6231", "NGC 5128", "NGC 6541", "NGC 3201", "NGC 5139", "NGC 6352", "NGC 6193",
+               "NGC 4945", "NGC 5286", "IC 2391", "NGC 6397", "NGC 1261", "NGC 5823", "NGC 6067", "NGC 2867", "NGC 3532", "NGC 3372", "NGC 6752", "NGC 4755", "NGC 6025",
+               "NGC 2516", "NGC 3766", "NGC 4609", "COALSACK", "IC 2944", "NGC 6744", "IC 2602", "NGC 2070", "NGC 362", "NGC 4833", "NGC 104", "NGC 6101", "NGC 4372", "NGC 3195"]
+
 #my_DSO_list = ["M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10"]
 #my_DSO_list = ["M13", "M42", "M43", "M4", "M51", "M100", "M99", "M78", "M81", "M53"]
+#my_DSO_list = ["NGC2070"]
 
-#my_DSO_list = ["M30"]
 
 class DSO:
 
@@ -757,6 +775,8 @@ def sort_DSOs(dso_list):
           else:
             nautical_night_dsos.append(dso)
     else:
+      if debug:
+        print("Invisible DSO: " + str(dso.the_object_name))
       invisible_dsos.append(dso)
 
   if debug:
@@ -829,9 +849,10 @@ if __name__ == '__main__':
           plot(dso_list)
 
     elif options.tonight:
-      print("Find best DSOs for " + str(theDate) + ", ordered by their max. altitude...")
+      print("Find best DSOs for " + str(today.strftime("%d.%m.%Y")) + " - " + str(tomorrow.strftime("%d.%m.%Y")) + ", ordered by their max. altitude...")
       dso_list = []
       for dso_name in my_DSO_list:
+        print("Check DSO: " + str(dso_name))
         dso = DSO(dso_name, today, tomorrow)
         dso_list.append(dso)
 
@@ -872,14 +893,13 @@ if __name__ == '__main__':
       if len(invisible_dsos)>0:
         for idso in invisible_dsos:
           msg = "\n  " + idso.the_object_name + ": " + str(round(idso.max_alt,0)) + " in " + str(idso.max_alt_direction) + " at " + str(idso.max_alt_time.strftime("%H:%M"))
-        print(msg)
-        result_msg += msg
+          print(msg)
+          result_msg += msg
 
       if options.message:
         if debug:
           print("\n\n\nSend results message:")
           print(result_msg)
-        # send result_msg
         send_message.text(result_msg)
 
   except Exception as e:
