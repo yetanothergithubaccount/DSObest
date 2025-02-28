@@ -903,7 +903,7 @@ if __name__ == '__main__':
         print(pdfdata)
       documentTitle ="Messier Objects Visibility in " + str(options.location)
       title = "Messier Objects Visibility"
-      subTitle = today.strftime("%d") + ".-" + tomorrow.strftime("%d.%m.%Y") + " in " + str(options.location) + " (" + str(options.latitude) + ", " + str(options.longitude) + ")"  #"03.-04.03.2025 in Maspalomas (27.749997, -15.5666644)"
+      subTitle = today.strftime("%d.%m.") + ".-" + tomorrow.strftime("%d.%m.%Y") + " in " + str(options.location) + " (" + str(options.latitude) + ", " + str(options.longitude) + ")"  #"03.-04.03.2025 in Maspalomas (27.749997, -15.5666644)"
 
       elements = []
       PAGESIZE = portrait(A4)
