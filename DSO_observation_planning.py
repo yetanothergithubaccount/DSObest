@@ -947,6 +947,7 @@ if __name__ == '__main__':
           print("\n\n\nSend results message:")
           print(result_msg)
         send_message.text(result_msg)
+        send_message.file(fileName)
 
   except Exception as e:
     print("DSO observation planning error " + str(dso_name) + ": " + str(e))

@@ -27,3 +27,12 @@ def image(path_name):
     # TODO implement your own
   except Exception as e:
     print(e)
+
+def file(file_name):
+  try:
+    if debug:
+      print("Send file: ")
+      print(file_name)
+    # TODO implement your own
+  except Exception as e:
+    print(e)
