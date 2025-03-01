@@ -52,6 +52,8 @@ import config # own
 import sky_utils # own
 import pytz
 import send_message
+from time import sleep
+import asyncio
 
 from reportlab.lib import colors
 from reportlab.lib.units import cm
@@ -59,6 +61,7 @@ from reportlab.lib.pagesizes import A4, portrait
 from reportlab.platypus import SimpleDocTemplate, TableStyle, Table
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import Paragraph, Spacer
+from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_CENTER, TA_RIGHT
 
 debug = False #True
 base_dir = "./"
@@ -150,7 +153,6 @@ my_DSO_list = ["M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10", "M11
 
 # Messier catalogue
 #my_DSO_list = ["M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10", "M11", "M12", "M13", "M14", "M15", "M16", "M17", "M18", "M19", "M20", "M21", "M22", "M23", "M24", "M25", "M26", "M27", "M28", "M29", "M30", "M31", "M32", "M33", "M34", "M35", "M36", "M37", "M38", "M39", "M40", "M41", "M42", "M43", "M44", "M45", "M46", "M47", "M48", "M49", "M50", "M51", "M52", "M53", "M54", "M55", "M56", "M57", "M58", "M59", "M60", "M61", "M62", "M63", "M64", "M65", "M66", "M67", "M68", "M69", "M70", "M71", "M72", "M73", "M74", "M75", "M76", "M77", "M78", "M79", "M80", "M81", "M82", "M83", "M84", "M85", "M86", "M87", "M88", "M89", "M90", "M91", "M92", "M93", "M94", "M95", "M96", "M97", "M98", "M99", "M100", "M101", "M102", "M103", "M104", "M105", "M106", "M107", "M108", "M109", "M110"]
-#my_DSO_list = ["M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10"]
 
 class DSO:
 
@@ -488,7 +490,7 @@ class DSO:
         top_score = True
         sub_text += "\n    " + msg
       if moon_dir != self.max_alt_direction:
-        msg = "OK: Dir moon: " + str(moon_dir) + " (" + str(round(moon_az,0)) + ") " + ", DSO: " + str(self.max_alt_direction) + " (" + str(round(self.max_alt_az,0)) + ")"
+        msg = "OK: Dir moon: " + str(moon_dir) + " (" + str(round(moon_az,0)) + ", alt " + " (" + str(round(moon_alt,0)) + ") " + ", DSO: " + str(self.max_alt_direction) + " (" + str(round(self.max_alt_az,0)) + ")"
         if debug:
           print(msg)
         score = True
@@ -843,7 +845,7 @@ if __name__ == '__main__':
 
       # data format for pdf
       #data = [["M1", "TODO"], ["M2", "TODO"],
-      pdfdata = []
+      pdfdata_nn, pdfdata_an, pdfdata_in = [], [], []
 
       print("Find best DSOs for " + str(today.strftime("%d.%m.%Y")) + " - " + str(tomorrow.strftime("%d.%m.%Y")) + ", ordered by their max. altitude...")
       dso_list = []
@@ -865,7 +867,7 @@ if __name__ == '__main__':
         msg = "\n  " + ndso.the_object_name + ": " + str(round(ndso.max_alt,0)) + " in " + str(ndso.max_alt_direction) + " at " + str(ndso.max_alt_time.strftime("%H:%M")) # + " (nautical night)")
         if options.moon:
           msg +=  str(ndso.sub_text_moon_at_max_alt)
-          pdfdata.append([ndso.the_object_name, msg])
+          pdfdata_nn.append([ndso.the_object_name, msg.lstrip("\n\r")])
         print(msg)
         result_msg += msg
 
@@ -878,7 +880,7 @@ if __name__ == '__main__':
         msg = "\n  " + asdso.the_object_name + ": " + str(round(asdso.max_alt,0)) + " in " + str(asdso.max_alt_direction) + " at " + str(asdso.max_alt_time.strftime("%H:%M")) # + " (astronomical night)")
         if options.moon:
           msg += str(asdso.sub_text_moon_at_max_alt)
-          pdfdata.append([str(asdso.the_object_name), str(msg)])
+          pdfdata_an.append([str(asdso.the_object_name), msg.lstrip("\n\r")])
         print(msg)
         result_msg += msg
 
@@ -886,21 +888,27 @@ if __name__ == '__main__':
         print("# Invisible DSOs: " + str(len(invisible_dsos)))
 
       msg = "\n\nInvisible DSOs:"
-      print(msg)
       result_msg += msg
       if len(invisible_dsos)>0:
+        print(msg)
         for idso in invisible_dsos:
           msg = "\n  " + idso.the_object_name + ": " + str(round(idso.max_alt,0)) + " in " + str(idso.max_alt_direction) + " at " + str(idso.max_alt_time.strftime("%H:%M")) + " [" + str(my_DSO_list.index(idso.the_object_name)+2) + "]"
           print(msg)
-          pdfdata.append([idso.the_object_name, msg])
+          pdfdata_in.append([idso.the_object_name, msg.lstrip("\n\r")])
           result_msg += msg
+      else:
+        print("No invisible DSOs in the list.")
 
       # create PDF document
       fileName = "DSOs_in_" + str(options.location) + "_" + str(theDate) + ".pdf"
       if debug:
         print("Create PDF " + str(fileName) + "...")
         print("")
-        print(pdfdata)
+        print(pdfdata_nn)
+        print("")
+        print(pdfdata_an)
+        print("")
+        print(pdfdata_in)
       documentTitle ="DSO Visibility in " + str(options.location)
       title = "DSO Visibility"
       subTitle = today.strftime("%d.%m.") + "-" + tomorrow.strftime("%d.%m.%Y") + " in " + str(options.location) + " (" + str(options.latitude) + ", " + str(options.longitude) + ")"  #"03.-04.03.2025 in Maspalomas (27.749997, -15.5666644)"
@@ -923,23 +931,94 @@ if __name__ == '__main__':
                                  alignment=1,
                                  spaceAfter=12)
       elements.append(Paragraph(subTitle, styleH3))
-      colWidths=(1*cm, 5*cm)
-      t = Table(pdfdata, colWidths=[2*cm] + [None] * (len(pdfdata[0]) - 1), rowHeights=50, hAlign='LEFT')
-      table_style = TableStyle([
-          ('ALIGN',(1,1),(-2,-2),'RIGHT'),
-          ('BACKGROUND',(1,1),(-2,-2),colors.white),
-          ('TEXTCOLOR',(0,0),(1,-1),colors.black),
-          ('INNERGRID',(0,0),(-1,-1),0.25,colors.black),
-          ('BOX',(0,0),(-1,-1),0.25,colors.black),
-      ])
 
-      for row, values in enumerate(pdfdata):
-        #print(row, values)
-        if row % 2 == 0:
-          table_style.add('BACKGROUND',(0,row),(1,row),colors.lightgrey)
+      style.add(ParagraphStyle(name='Normal_LEFT',
+                          parent=style['Normal'],
+                          fontName='Helvetica',
+                          wordWrap='LTR',
+                          alignment=TA_LEFT,
+                          fontSize=11,
+                          leading=13,
+                          textColor=colors.black,
+                          borderPadding=0,
+                          leftIndent=0,
+                          rightIndent=0,
+                          spaceAfter=0,
+                          spaceBefore=0,
+                          splitLongWords=True,
+                          spaceShrinkage=0.05,
+                          ))
+      styleP = ParagraphStyle('PStyle',
+                                 fontName="Helvetica",
+                                 fontSize=11,
+                                 parent=style['Normal_LEFT'],
+                                 alignment=1,
+                                 spaceAfter=10)
+      paragraph = "Nautical night: " + str(nautical_night_start.strftime("%d.%m.%y %H:%M")) + " - " + str(nautical_night_end.strftime("%d.%m.%y %H:%M"))
+      elements.append(Paragraph(paragraph, styleP))
+      elements.append(Paragraph("", styleP))
+      paragraph = "Astronomical night: " + str(astronomical_night_start.strftime("%d.%m.%y %H:%M")) + " - " + str(astronomical_night_end.strftime("%d.%m.%y %H:%M"))
+      elements.append(Paragraph(paragraph, styleP))
 
-      t.setStyle(table_style)
-      elements.append(t)
+      if len(pdfdata_nn)>0:
+        paragraph = "DSOs during nautical night:"
+        elements.append(Paragraph(paragraph, styleP))
+        colWidths=(1*cm, 5*cm)
+        t = Table(pdfdata_nn, colWidths=[2*cm] + [None] * (len(pdfdata_nn[0]) - 1), rowHeights=40, hAlign='LEFT')
+        table_style = TableStyle([
+            ('ALIGN',(1,1),(-2,-2),'RIGHT'),
+            ('BACKGROUND',(1,1),(-2,-2),colors.white),
+            ('TEXTCOLOR',(0,0),(1,-1),colors.black),
+            ('INNERGRID',(0,0),(-1,-1),0.25,colors.black),
+            ('BOX',(0,0),(-1,-1),0.25,colors.black),
+        ])
+        for row, values in enumerate(pdfdata_nn):
+          #print(row, values)
+          if row % 2 == 0:
+            table_style.add('BACKGROUND',(0,row),(1,row),colors.lightgrey)
+        t.setStyle(table_style)
+        elements.append(t)
+
+      if len(pdfdata_an)>0:
+        paragraph = "DSOs during astronomical night:"
+        elements.append(Paragraph(paragraph, styleP))
+        colWidths=(1*cm, 5*cm)
+        t = Table(pdfdata_an, colWidths=[2*cm] + [None] * (len(pdfdata_an[0]) - 1), rowHeights=40, hAlign='LEFT')
+        table_style = TableStyle([
+            ('ALIGN',(1,1),(-2,-2),'RIGHT'),
+            ('BACKGROUND',(1,1),(-2,-2),colors.white),
+            ('TEXTCOLOR',(0,0),(1,-1),colors.black),
+            ('INNERGRID',(0,0),(-1,-1),0.25,colors.black),
+            ('BOX',(0,0),(-1,-1),0.25,colors.black),
+        ])
+        for row, values in enumerate(pdfdata_an):
+          #print(row, values)
+          if row % 2 == 0:
+            table_style.add('BACKGROUND',(0,row),(1,row),colors.lightgrey)
+        t.setStyle(table_style)
+        elements.append(t)
+
+      if len(pdfdata_in)>0:
+        paragraph = "Invisible DSOs:"
+        elements.append(Paragraph(paragraph, styleP))
+        colWidths=(1*cm, 5*cm)
+        t = Table(pdfdata_in, colWidths=[2*cm] + [None] * (len(pdfdata_in[0]) - 1), rowHeights=40, hAlign='LEFT')
+        table_style = TableStyle([
+            ('ALIGN',(1,1),(-2,-2),'RIGHT'),
+            ('BACKGROUND',(1,1),(-2,-2),colors.white),
+            ('TEXTCOLOR',(0,0),(1,-1),colors.black),
+            ('INNERGRID',(0,0),(-1,-1),0.25,colors.black),
+            ('BOX',(0,0),(-1,-1),0.25,colors.black),
+        ])
+        for row, values in enumerate(pdfdata_in):
+          #print(row, values)
+          if row % 2 == 0:
+            table_style.add('BACKGROUND',(0,row),(1,row),colors.lightgrey)
+        t.setStyle(table_style)
+        elements.append(t)
+
+
+      # create PDF
       doc.build(elements)
 
       if options.message:
