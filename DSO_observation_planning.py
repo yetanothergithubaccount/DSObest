@@ -10,9 +10,13 @@ Some DSOs found in catalogues like
 - Orphaned Beauties: https://www.astrobin.com/in2ev8/
 - Faint Giants: https://www.astrobin.com/0unmpq/
 
+- https://en.wikipedia.org/wiki/Caldwell_catalogue
+
 python3 DSO_observation_planning.py --dso M31 --best # find best time and date to observe M31
 
 python3 DSO_observation_planning.py --best
+
+python3 DSO_observation_planning.py -t -c Caldwell -m # check Caldwell DSO's for tonight, consider moon
 
 Determining and plotting the altitude/azimuth of a celestial object per day.
 The results will be fixed in a json-file per day for quick reference.
@@ -33,8 +37,9 @@ result in a list of matching DSOs from the internal catalogue.
 # sudo pip3 install pandas --break-system-packages
 # sudo pip3 install suntime --break-system-packages
 # sudo pip3 install pyephem --break-system-packages
-# sudo pip3 install spaceweather--break-system-packages
+# sudo pip3 install spaceweather --break-system-packages
 # sudo pip3 install matplotlib-label-lines --break-system-packages
+# sudo pip3 install reportlab --break-system-packages
 
 import os, sys, platform
 import optparse
@@ -49,6 +54,17 @@ from astroquery.simbad import Simbad # https://github.com/astropy/astroquery
 import config # own
 import sky_utils # own
 import pytz
+import send_message
+from time import sleep
+import asyncio
+
+from reportlab.lib import colors
+from reportlab.lib.units import cm
+from reportlab.lib.pagesizes import A4, portrait
+from reportlab.platypus import SimpleDocTemplate, TableStyle, Table
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import Paragraph, Spacer
+from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_CENTER, TA_RIGHT
 
 debug = False #True
 base_dir = "./"
@@ -57,58 +73,71 @@ parser = optparse.OptionParser()
 parser.add_option('-d', '--dso',
     action="store", dest="dso",
     help="Deep space object to check (M1, ...)") #, default="M31")
-parser.add_option('-a', '--latitude',
+
+query_opts_location = optparse.OptionGroup(
+    parser, 'Location data',
+    'These options define the location.',
+    )
+query_opts_location.add_option('-a', '--latitude',
     action="store", dest="latitude",
     help="Latitude", default=config.coordinates['latitude'])
-parser.add_option('-o', '--longitude',
+query_opts_location.add_option('-o', '--longitude',
     action="store", dest="longitude",
     help="Longitude", default=config.coordinates['longitude'])
-parser.add_option('-e', '--elevation',
+query_opts_location.add_option('-e', '--elevation',
     action="store", dest="elevation",
     help="Elevation (height)", default=config.coordinates['elevation'])
-parser.add_option('-l', '--location',
+query_opts_location.add_option('-l', '--location',
     action="store", dest="location",
     help="Location", default=config.coordinates['location'])
+parser.add_option_group(query_opts_location)
+
 parser.add_option('-f', '--debug',
     action="store_true", dest="debug",
     help="Debug mode", default=False)
+parser.add_option('-n', '--message',
+    action="store_true", dest="message",
+    help="Send results message", default=False)
 
 parser.add_option('-b', '--best',
     action="store_true", dest="best",
     help="Check visibility during the year to find best date and time", default=False)
 
-parser.add_option('-t', '--tonight',
+query_opts_tonight = optparse.OptionGroup(
+    parser, 'Tonight parameters',
+    'These options define the parameters for tonight.',
+    )
+query_opts_tonight.add_option('-t', '--tonight',
     action="store_true", dest="tonight",
     help="Check visibility of DSOs tonight to find best time", default=False)
-parser.add_option('-m', '--moon',
+query_opts_tonight.add_option('-g', '--thenights_date',
+    action="store", dest="thenights_date",
+    help="Check visibility of DSOs at this date to find best time")
+query_opts_tonight.add_option('-m', '--moon',
     action="store_true", dest="moon",
     help="Consider moon (illumination, location) during tonights checks.", default=False)
-parser.add_option('-j', '--justthetopones',
+query_opts_tonight.add_option('-j', '--justthetopones',
     action="store_true", dest="justthetopones",
     help="Check visibility of DSOs tonight to find best time, consider the TOP ones only (requires tonight and moon option).", default=False)
-parser.add_option('-r', '--direction',
+query_opts_tonight.add_option('-r', '--direction',
     action="store", dest="direction",
     help="Filter tonight's best results for a certain direction (requires tonight and moon option).") # S/W/N/E
+query_opts_tonight.add_option('-c', '--catalogue',
+    action="store", dest="catalogue",
+    help="Select catalogue (Messier, Caldwell", default="Messier") # Messier/Caldwell
+
+
+parser.add_option_group(query_opts_tonight)
 
 options, args = parser.parse_args()
 
 if debug:
   print("Find best tonight's DSOs: " + str(options.tonight))
+  if options.thenights_date:
+    print("The night's date: " + str(options.thenights_date))
   print("Consider moon: " + str(options.moon))
   print("  display only the TOP ones: " + str(options.justthetopones))
   print("  filter for direction: " + str(options.direction))
-
-if options.latitude:
-  latitude = options.latitude
-
-if options.longitude:
-  longitude = float(options.longitude)
-
-if options.elevation:
-  elevation = int(options.elevation)
-
-if options.location:
-  location = options.location
 
 if options.dso:
   dso_name = str(options.dso).upper()
@@ -116,17 +145,36 @@ else:
   dso_name = str("M31")
 
 today = datetime.date.today()
+
+if options.thenights_date:
+  the_date = options.thenights_date.split(".")
+  today = today.replace(day=int(the_date[0]), month=int(the_date[1]), year=int(the_date[2]))
+
 theDate = today.strftime("%d.%m.%Y")
+
 
 if options.debug:
   debug = True
 
-my_DSO_list = ["M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10", "M11", "M12", "M13", "M14", "M15", "M16", "M17", "M18", "M19", "M20", "M21", "M22", "M23", "M24", "M25", "M26", "M27", "M28", "M29", "M30", "M31", "M32", "M33", "M34", "M35", "M36", "M37", "M38", "M39", "M40", "M41", "M42", "M43", "M44", "M45", "M46", "M47", "M48", "M49", "M50", "M51", "M52", "M53", "M54", "M55", "M56", "M57", "M58", "M59", "M60", "M61", "M62", "M63", "M64", "M65", "M66", "M67", "M68", "M69", "M70", "M71", "M72", "M73", "M74", "M75", "M76", "M77", "M78", "M79", "M80", "M81", "M82", "M83", "M84", "M85", "M86", "M87", "M88", "M89", "M90", "M91", "M92", "M93", "M94", "M95", "M96", "M97", "M98", "M99", "M100", "M101", "M102", "M103", "M104", "M105", "M106", "M107", "M108", "M109", "M110", "NGC7822", "SH2-173", "NGC210", "IC63", "SH2-188", "NGC613", "NGC660", "NGC672", "NGC918", "IC1795", "IC1805", "NGC1055", "IC1848", "SH2-200", "NGC1350", "NGC1499", "LBN777", "NGC1532", "LDN1495", "NGC1555", "NGC1530", "NGC1624", "NGC1664", "Melotte15", "vdb31", "NGC1721", "IC2118", "IC410", "SH2-223", "SH2-224", "IC434", "SH2-240", "LDN1622", "SH2-261", "SH2-254", "NGC2202", "IC443", "NGC2146", "NGC2217", "NGC2245", "SH2-308", "NGC2327", "SH2-301", "Abell21", "NGC2835", "Abell33", "NGC2976","Arp316", "NGC3359", "Arp214", "NGC4395", "NGC4535", "Abell35", "NGC5068", "NGC5297", "NGC5371", "NGC5364", "NGC5634", "NGC5701", "NGC5963", "NGC5982", "IC4592", "IC4628", "Barnard59", "SH2-003", "Barnard252", "NGC6334", "NGC6357", "Barnard75", "NGC6384", "SH2-54", "vdb126", "SH2-82", "NGC6820", "SH2-101", "WR134", "LBN331", "LBN325", "SH2-112", "SH2-115", "LBN468", "IC5070", "vdb141", "SH2-114", "vdb152", "SH2-132", "Arp319", "NGC7497", "SH2-157", "NGC7606", "Abell85", "LBN 564", "SH2-170", "LBN603", "LBN639", "LBN640", "LDN1333", "NGC1097", "LBN762", "SH2-202", "vdb14", "vdb15", "LDN1455", "vdb13", "vdb16", "IC348", "SH2-205", "SH2-204", "Barnard208", "Barnard7", "vdb27", "Barnard8", "Barnard18", "SH2-216", "Abell7", "SH2-263", "SH2-265", "SH2-232", "Barnard35", "SH2-249", "IC447", "SH2-280", "SH2-282", "SH2-304", "SH2-284", "LBN1036", "NGC2353", "SH2-310", "SH2-302", "Gum14", "Gum15", "Gum17", "Abell31", "SH2-1", "SH2-273", "SH2-46", "SH2-34", "IC4685", "SH2-91", "Barnard147", "IC1318", "LBN380", "Barnard150", "LBN552", "SH2-119", "SH2-124", "Barnard169", "LBN420", "SH2-134", "SH2-150", "LDN1251", "LBN438", "SH2-154", "LDN1218", "SH2-160", "SH2-122", "LBN575", "LDN1262", "LBN534", "vdb158", "NGC7380", "NGC6543", "NGC2264", "NGC474", "NGC246", "NGC7479", "NGC7741", "IC5068", "SH2-155", "NGC7008", "NGC4676A", "NGC4536", "NGC2403", "IC11", "NGC2359", "IC5067", "NGC281", "IC44", "NGC6992", "NGC7293", "NGC6960", "IC4703", "NGC6618", "NGC6826", "NGC7662"]
-#my_DSO_list = ["M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10", "M11", "M12", "M13", "M14", "M15", "M16", "M17", "M18", "M19", "M20", "M21", "M22", "M23", "M24", "M25", "M26", "M27", "M28", "M29", "M30", "M31", "M32", "M33", "M34", "M35", "M36", "M37", "M38", "M39", "M40", "M41", "M42", "M43", "M44", "M45", "M46", "M47", "M48", "M49", "M50", "M51", "M52", "M53", "M54", "M55", "M56", "M57", "M58", "M59", "M60", "M61", "M62", "M63", "M64", "M65", "M66", "M67", "M68", "M69", "M70", "M71", "M72", "M73", "M74", "M75", "M76", "M77", "M78", "M79", "M80", "M81", "M82", "M83", "M84", "M85", "M86", "M87", "M88", "M89", "M90", "M91", "M92", "M93", "M94", "M95", "M96", "M97", "M98", "M99", "M100", "M101", "M102", "M103", "M104", "M105", "M106", "M107", "M108", "M109", "M110"]
-#my_DSO_list = ["M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10"]
-#my_DSO_list = ["M13", "M42", "M43", "M4", "M51", "M100", "M99", "M78", "M81", "M53"]
+my_DSO_list = []
 
-#my_DSO_list = ["M30"]
+# list of Messier DSOs in northern hemisphere
+messier_obj = ["M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10", "M11", "M12", "M13", "M14", "M15", "M16", "M17", "M18", "M19", "M20", "M21", "M22", "M23", "M24", "M25", "M26", "M27", "M28", "M29", "M30", "M31", "M32", "M33", "M34", "M35", "M36", "M37", "M38", "M39", "M40", "M41", "M42", "M43", "M44", "M45", "M46", "M47", "M48", "M49", "M50", "M51", "M52", "M53", "M54", "M55", "M56", "M57", "M58", "M59", "M60", "M61", "M62", "M63", "M64", "M65", "M66", "M67", "M68", "M69", "M70", "M71", "M72", "M73", "M74", "M75", "M76", "M77", "M78", "M79", "M80", "M81", "M82", "M83", "M84", "M85", "M86", "M87", "M88", "M89", "M90", "M91", "M92", "M93", "M94", "M95", "M96", "M97", "M98", "M99", "M100", "M101", "M102", "M103", "M104", "M105", "M106", "M107", "M108", "M109", "M110", "NGC7822", "SH2-173", "NGC210", "IC63", "SH2-188", "NGC613", "NGC660", "NGC672", "NGC918", "IC1795", "IC1805", "NGC1055", "IC1848", "SH2-200", "NGC1350", "NGC1499", "LBN777", "NGC1532", "LDN1495", "NGC1555", "NGC1530", "NGC1624", "NGC1664", "Melotte15", "vdb31", "NGC1721", "IC2118", "IC410", "SH2-223", "SH2-224", "IC434", "SH2-240", "LDN1622", "SH2-261", "SH2-254", "NGC2202", "IC443", "NGC2146", "NGC2217", "NGC2245", "SH2-308", "NGC2327", "SH2-301", "Abell21", "NGC2835", "Abell33", "NGC2976","Arp316", "NGC3359", "Arp214", "NGC4395", "NGC4535", "Abell35", "NGC5068", "NGC5297", "NGC5371", "NGC5364", "NGC5634", "NGC5701", "NGC5963", "NGC5982", "IC4592", "IC4628", "Barnard59", "SH2-003", "Barnard252", "NGC6334", "NGC6357", "Barnard75", "NGC6384", "SH2-54", "vdb126", "SH2-82", "NGC6820", "SH2-101", "WR134", "LBN331", "LBN325", "SH2-112", "SH2-115", "LBN468", "IC5070", "vdb141", "SH2-114", "vdb152", "SH2-132", "Arp319", "NGC7497", "SH2-157", "NGC7606", "Abell85", "LBN 564", "SH2-170", "LBN603", "LBN639", "LBN640", "LDN1333", "NGC1097", "LBN762", "SH2-202", "vdb14", "vdb15", "LDN1455", "vdb13", "vdb16", "IC348", "SH2-205", "SH2-204", "Barnard208", "Barnard7", "vdb27", "Barnard8", "Barnard18", "SH2-216", "Abell7", "SH2-263", "SH2-265", "SH2-232", "Barnard35", "SH2-249", "IC447", "SH2-280", "SH2-282", "SH2-304", "SH2-284", "LBN1036", "NGC2353", "SH2-310", "SH2-302", "Gum14", "Gum15", "Gum17", "Abell31", "SH2-1", "SH2-273", "SH2-46", "SH2-34", "IC4685", "SH2-91", "Barnard147", "IC1318", "LBN380", "Barnard150", "LBN552", "SH2-119", "SH2-124", "Barnard169", "LBN420", "SH2-134", "SH2-150", "LDN1251", "LBN438", "SH2-154", "LDN1218", "SH2-160", "SH2-122", "LBN575", "LDN1262", "LBN534", "vdb158", "NGC7380", "NGC6543", "NGC2264", "NGC474", "NGC246", "NGC7479", "NGC7741", "IC5068", "SH2-155", "NGC7008", "NGC4676A", "NGC4536", "NGC2403", "IC11", "NGC2359", "IC5067", "NGC281", "IC44", "NGC6992", "NGC7293", "NGC6960", "IC4703", "NGC6618", "NGC6826", "NGC7662"]
+
+# Messier catalogue
+#my_DSO_list = ["M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10", "M11", "M12", "M13", "M14", "M15", "M16", "M17", "M18", "M19", "M20", "M21", "M22", "M23", "M24", "M25", "M26", "M27", "M28", "M29", "M30", "M31", "M32", "M33", "M34", "M35", "M36", "M37", "M38", "M39", "M40", "M41", "M42", "M43", "M44", "M45", "M46", "M47", "M48", "M49", "M50", "M51", "M52", "M53", "M54", "M55", "M56", "M57", "M58", "M59", "M60", "M61", "M62", "M63", "M64", "M65", "M66", "M67", "M68", "M69", "M70", "M71", "M72", "M73", "M74", "M75", "M76", "M77", "M78", "M79", "M80", "M81", "M82", "M83", "M84", "M85", "M86", "M87", "M88", "M89", "M90", "M91", "M92", "M93", "M94", "M95", "M96", "M97", "M98", "M99", "M100", "M101", "M102", "M103", "M104", "M105", "M106", "M107", "M108", "M109", "M110"]
+
+# Caldwell catalogue DSOs in northern hemisphere
+caldwell_obj_N = ["NGC 188", "NGC 40", "NGC 4236", "NGC 7023", "IC 342", "NGC 6543", "NGC 2403", "NGC 559", "SH2-155", "NGC 663", "NGC 7635", "NGC 6946", "NGC 457", "NGC 869",
+               "NGC 6826", "NGC 7243", "NGC 147", "NGC 185", "IC 5146", "NGC 7000", "NGC 4449", "NGC 7662", "NGC 1275", "NGC 2419", "NGC 4244", "NGC 6888", "NGC 752", "NGC 5005",
+               "NGC 7331","IC 405", "NGC 4631", "NGC 6992", "NGC 6960", "NGC 4889", "NGC 4559", "NGC 6885", "NGC 4565", "NGC 2392", "NGC 3626", "HYADES", "NGC 7006", "NGC 7814",
+               "NGC 7479", "NGC 5248", "NGC 2261", "NGC 6934", "NGC 2775", "NGC 2238", "NGC 2244", "IC 1613", "NGC 4697", "NGC 3115", "NGC 2506", "NGC 7009", "NGC 246",
+               "NGC 6822", "NGC 2360", "NGC 3242", "NGC 4038", "NGC 4039", "NGC 247", "NGC 7293", "NGC 2362", "NGC 253"]
+
+if str(options.catalogue) == "Messier":
+  my_DSO_list = messier_obj
+if str(options.catalogue) == "Caldwell":
+  my_DSO_list = caldwell_obj_N
 
 class DSO:
 
@@ -136,16 +184,19 @@ class DSO:
     self.theDate_american = today.strftime("%Y-%m-%d")
     self.today = today
     self.tomorrow = tomorrow
+    self.tomorrow_american = tomorrow.strftime("%Y-%m-%d")
 
     if debug:
       print("Today: " + str(self.today))
       print("Tomorrow: " + str(self.tomorrow))
 
-    self.civil_night_start, self.civil_night_end, self.nautical_night_start, self.nautical_night_end, self.astronomical_night_start, self.astronomical_night_end  = sky_utils.astro_night_times(self.theDate, latitude, longitude, debug)
+    self.civil_night_start, self.civil_night_end, self.nautical_night_start, self.nautical_night_end, self.astronomical_night_start, self.astronomical_night_end = sky_utils.astro_night_times(self.theDate, options.latitude, options.longitude, debug)
 
     if debug:
-      print("Latitude: " + str(latitude))
-      print("Longitude: " + str(longitude))
+      print("Latitude: " + str(options.latitude))
+      print("Longitude: " + str(options.longitude))
+      print("Elevation: " + str(options.elevation))
+      print("Location: " + str(options.location))
       print("Nautical night start: " + str(self.nautical_night_start))
       print("Nautical night end: " + str(self.nautical_night_end))
       print("Astronomical night start: " + str(self.astronomical_night_start))
@@ -326,7 +377,7 @@ class DSO:
     # Find the alt,az coordinates of the object at 100 times evenly spaced between 10pm
     # and 7am EDT:
     # +1: otherwise the dso graph does not match the x-axis ticks
-    self.midnight = Time(str(self.theDate_american) + " 23:59:00") - utcoffset
+    self.midnight = Time(str(self.tomorrow_american) + " 00:00:00") - utcoffset
     #self.delta_midnight = np.linspace(-2, 10, 100) * u.hour
     self.delta_midnight = np.linspace(-12, 12, 1000) * u.hour
     self.frame_night = AltAz(obstime=self.midnight + self.delta_midnight, location=the_location)
@@ -399,7 +450,7 @@ class DSO:
 
       if len(dso_in_the_dark_alt)>0:
         dso_in_the_dark_alt_max = max(dso_in_the_dark_alt)
-        index_alt_max = dso_in_the_dark_alt.index(max(dso_in_the_dark_alt)) #np.argmax(dso_in_the_dark_alt)
+        index_alt_max = dso_in_the_dark_alt.index(dso_in_the_dark_alt_max) #np.argmax(dso_in_the_dark_alt)
         if debug:
           print("max: " + str(dso_in_the_dark_alt_max) + " at " + str(dso_in_the_dark_ot[index_alt_max]))
 
@@ -454,20 +505,20 @@ class DSO:
         print("  Moon alt " + str(moon_alt) + " az " + str(moon_az) + " dir " + str(moon_dir))
 
       if float(moon_alt) < 0:
-        msg = "TOP: Moon is below the horizon at " + str(self.max_alt_time.strftime("%d.%m.%Y %H:%M"))
+        msg = "TOP: Moon < the horizon at " + str(self.max_alt_time.strftime("%d.%m. %H:%M"))
         if debug:
           print(msg)
         score = True
         top_score = True
         sub_text += "\n    " + msg
       if moon_dir != self.max_alt_direction:
-        msg = "Quite good: Moon dir: " + str(moon_dir) + " (" + str(round(moon_az,0)) + ") " + ", DSO dir: " + str(self.max_alt_direction) + " (" + str(round(self.max_alt_az,0)) + ")"
+        msg = "OK: Dir moon: " + str(moon_dir) + " (" + str(round(moon_az,0)) + ", alt " + " (" + str(round(moon_alt,0)) + ") " + ", DSO: " + str(self.max_alt_direction) + " (" + str(round(self.max_alt_az,0)) + ")"
         if debug:
           print(msg)
         score = True
         sub_text += "\n    " + msg
       if moon_phase_percent < 50:
-        msg = "Quite nice: Moon illumination is below 50 %: " + str(moon_phase_percent) + " %"
+        msg = "Nice: Moon illumination < 50 %: " + str(moon_phase_percent) + " %"
         if debug:
           print(msg)
         score = True
@@ -702,7 +753,7 @@ def sort_DSOs(dso_list):
               else:
                 astronomical_night_dsos.append(dso)
           else:
-            if "TOP" in dso.sub_text_moon_at_max_alt or "Quite" in dso.sub_text_moon_at_max_alt:
+            if "TOP" in dso.sub_text_moon_at_max_alt or "OK" in dso.sub_text_moon_at_max_alt:
               if options.direction != None:
                 if str(options.direction) in str(dso.max_alt_direction):
                   astronomical_night_dsos.append(dso)
@@ -726,7 +777,7 @@ def sort_DSOs(dso_list):
               else:
                 nautical_night_dsos.append(dso)
           else:
-            if "TOP" in dso.sub_text_moon_at_max_alt or "Quite" in dso.sub_text_moon_at_max_alt:
+            if "TOP" in dso.sub_text_moon_at_max_alt or "OK" in dso.sub_text_moon_at_max_alt:
               if options.direction != None:
                 if str(options.direction) in str(dso.max_alt_direction):
                   nautical_night_dsos.append(dso)
@@ -739,6 +790,8 @@ def sort_DSOs(dso_list):
           else:
             nautical_night_dsos.append(dso)
     else:
+      if debug:
+        print("Invisible DSO: " + str(dso.the_object_name))
       invisible_dsos.append(dso)
 
   if debug:
@@ -751,14 +804,16 @@ if __name__ == '__main__':
   try:
     ######################################################################################
     # Use `astropy.coordinates.EarthLocation` to provide the location of the desired time
-    the_location = EarthLocation(lat=latitude, lon=longitude, height=elevation)
+    the_location = EarthLocation(lat=options.latitude, lon=options.longitude, height=options.elevation)
+
     now = datetime.datetime.now()
-    just_now = now.strftime("%Y-%m-%d %H:%M:%S")
-    theDate = now.strftime("%d.%m.%Y")
+    theDate = today.strftime("%d.%m.%Y")
     theYear = now.strftime("%Y")
-    theDate_today = now.strftime("%Y-%m-%d")
+    if options.thenights_date:
+      theYear = theDate[2]
 
     timeZone = pytz.timezone(config.coordinates["timezone"])
+    # MEZ assumed (UTC+1/2)
     if is_summertime(now, timeZone):
       utcoffset = +2 * u.hour  # +2 summertime, +1 wintertime
       if debug:
@@ -788,6 +843,10 @@ if __name__ == '__main__':
           dso = DSO(dso_name, the_day, the_tomorrow)
           dso_list.append(dso)
         plot(dso_list)
+
+        if options.message:
+          plot_name = base_dir + "DSO_" + str(dso.the_object_name) + "_" + str(dso.today.strftime("%Y")) + ".png"
+          send_message.image(plot_name)
       else:
         # loop over all DSOs
         for dso_name in my_DSO_list:
@@ -805,46 +864,191 @@ if __name__ == '__main__':
           plot(dso_list)
 
     elif options.tonight:
-      print("Find best DSOs for tonight, ordered by their max. altitude...")
+
+      # data format for pdf
+      #data = [["M1", "TODO"], ["M2", "TODO"],
+      pdfdata_nn, pdfdata_an, pdfdata_in = [], [], []
+
+      print("Find best DSOs for " + str(today.strftime("%d.%m.%Y")) + " - " + str(tomorrow.strftime("%d.%m.%Y")) + ", ordered by their max. altitude...")
       dso_list = []
       for dso_name in my_DSO_list:
+        print("Check DSO: " + str(dso_name))
         dso = DSO(dso_name, today, tomorrow)
         dso_list.append(dso)
 
-      result_msg = " Best DSOs for " + str(today.strftime("%d.%m.") + " - " + str(tomorrow.strftime("%d.%m.%Y")))
+      result_msg = "Best DSOs for " + str(today.strftime("%d.%m.Y")) + " - " + str(tomorrow.strftime("%d.%m.%Y")) + " at " + str(options.location) + " (" + str(options.latitude) + ", " + str(options.longitude) + " [" + str(options.elevation) + " m])"
 
       astronomical_night_start, astronomical_night_end, astronomical_night_dsos, nautical_night_start, nautical_night_end, nautical_night_dsos, invisible_dsos = sort_DSOs(dso_list)
 
-      msg = "\n\nNautical night: " + str(nautical_night_start.strftime("%d.%m.%Y %H:%M")) + " - " + str(nautical_night_end.strftime("%d.%m.%Y %H:%M"))
-      print(len(nautical_night_dsos))
+      msg = "\n\nNautical night: " + str(nautical_night_start.strftime("%d.%m.%y %H:%M")) + " - " + str(nautical_night_end.strftime("%d.%m.%y %H:%M"))
+      if debug:
+        print("# DSOs in nautical night: " + str(len(nautical_night_dsos)))
       print(msg)
       result_msg += msg
       for ndso in nautical_night_dsos:
-        msg = "  " + ndso.the_object_name + ": " + str(round(ndso.max_alt,0)) + " in " + str(ndso.max_alt_direction) + " at " + str(ndso.max_alt_time.strftime("%H:%M")) # + " (nautical night)")
+        msg = "\n  " + ndso.the_object_name + ": " + str(round(ndso.max_alt,0)) + " in " + str(ndso.max_alt_direction) + " at " + str(ndso.max_alt_time.strftime("%H:%M")) # + " (nautical night)")
         if options.moon:
-          msg += "\n" + str(ndso.sub_text_moon_at_max_alt)
+          msg +=  str(ndso.sub_text_moon_at_max_alt)
+          pdfdata_nn.append([ndso.the_object_name, msg.lstrip("\n\r")])
         print(msg)
         result_msg += msg
 
-      msg = "\n\nAstronomical night: " + str(astronomical_night_start.strftime("%d.%m.%Y %H:%M")) + " - " + str(astronomical_night_end.strftime("%d.%m.%Y %H:%M"))
-      print(len(astronomical_night_dsos))
+      msg = "\n\nAstronomical night: " + str(astronomical_night_start.strftime("%d.%m.%y %H:%M")) + " - " + str(astronomical_night_end.strftime("%d.%m.%y %H:%M"))
+      if debug:
+        print("# DSOs in astronomical night: " + str(len(astronomical_night_dsos)))
       print(msg)
       result_msg += msg
       for asdso in astronomical_night_dsos:
-        msg = "  " + asdso.the_object_name + ": " + str(round(asdso.max_alt,0)) + " in " + str(asdso.max_alt_direction) + " at " + str(asdso.max_alt_time.strftime("%H:%M")) # + " (astronomical night)")
+        msg = "\n  " + asdso.the_object_name + ": " + str(round(asdso.max_alt,0)) + " in " + str(asdso.max_alt_direction) + " at " + str(asdso.max_alt_time.strftime("%H:%M")) # + " (astronomical night)")
         if options.moon:
-          msg += "\n" + str(asdso.sub_text_moon_at_max_alt)
+          msg += str(asdso.sub_text_moon_at_max_alt)
+          pdfdata_an.append([str(asdso.the_object_name), msg.lstrip("\n\r")])
         print(msg)
         result_msg += msg
 
+      if debug:
+        print("# Invisible DSOs: " + str(len(invisible_dsos)))
+
+      msg = "\n\nInvisible DSOs:"
+      result_msg += msg
       if len(invisible_dsos)>0:
-        msg = "\n\nInvisible DSOs:"
         print(msg)
-        result_msg += msg
         for idso in invisible_dsos:
-          msg = "  " + idso.the_object_name + ": " + str(round(idso.max_alt,0)) + " in " + str(idso.max_alt_direction) + " at " + str(idso.max_alt_time.strftime("%H:%M"))
-        print(msg)
-        result_msg += msg
+          msg = "\n  " + idso.the_object_name + ": " + str(round(idso.max_alt,0)) + " in " + str(idso.max_alt_direction) + " at " + str(idso.max_alt_time.strftime("%H:%M")) + " [" + str(my_DSO_list.index(idso.the_object_name)+2) + "]"
+          print(msg)
+          pdfdata_in.append([idso.the_object_name, msg.lstrip("\n\r")])
+          result_msg += msg
+      else:
+        print("No invisible DSOs in the list.")
+
+      ## create PDF document
+      fileName = str(options.catalogue) + "_Catalogue DSOs_in_" + str(options.location) + "_" + str(theDate) + ".pdf"
+      if debug:
+        print("Create PDF " + str(fileName) + "...")
+        print("")
+        print(pdfdata_nn)
+        print("")
+        print(pdfdata_an)
+        print("")
+        print(pdfdata_in)
+      documentTitle = str(options.catalogue) + " Catalogue DSO Visibility in " + str(options.location)
+      title = str(options.catalogue) + " Catalogue DSO Visibility"
+      subTitle = today.strftime("%d.%m.") + "-" + tomorrow.strftime("%d.%m.%Y") + " in " + str(options.location) + " (" + str(options.latitude) + ", " + str(options.longitude) + ")"  #"03.-04.03.2025 in Maspalomas (27.749997, -15.5666644)"
+
+      elements = []
+      PAGESIZE = portrait(A4)
+      doc = SimpleDocTemplate(fileName,  pagesize=PAGESIZE, leftMargin=1*cm)
+      style = getSampleStyleSheet()
+      styleH2 = ParagraphStyle('H2Style',
+                                 fontName="Helvetica-Bold",
+                                 fontSize=16,
+                                 parent=style['Heading2'],
+                                 alignment=1,
+                                 spaceAfter=14)
+      elements.append(Paragraph(title, styleH2))
+      styleH3 = ParagraphStyle('H3Style',
+                                 fontName="Helvetica-Bold",
+                                 fontSize=12,
+                                 parent=style['Heading3'],
+                                 alignment=1,
+                                 spaceAfter=12)
+      elements.append(Paragraph(subTitle, styleH3))
+
+      style.add(ParagraphStyle(name='Normal_LEFT',
+                          parent=style['Normal'],
+                          fontName='Helvetica',
+                          wordWrap='LTR',
+                          alignment=TA_LEFT,
+                          fontSize=11,
+                          leading=13,
+                          textColor=colors.black,
+                          borderPadding=0,
+                          leftIndent=0,
+                          rightIndent=0,
+                          spaceAfter=0,
+                          spaceBefore=0,
+                          splitLongWords=True,
+                          spaceShrinkage=0.05,
+                          ))
+      styleP = ParagraphStyle('PStyle',
+                                 fontName="Helvetica",
+                                 fontSize=11,
+                                 parent=style['Normal_LEFT'],
+                                 alignment=1,
+                                 spaceAfter=10)
+      paragraph = "Nautical night: " + str(nautical_night_start.strftime("%d.%m.%y %H:%M")) + " - " + str(nautical_night_end.strftime("%d.%m.%y %H:%M"))
+      elements.append(Paragraph(paragraph, styleP))
+      elements.append(Paragraph("", styleP))
+      paragraph = "Astronomical night: " + str(astronomical_night_start.strftime("%d.%m.%y %H:%M")) + " - " + str(astronomical_night_end.strftime("%d.%m.%y %H:%M"))
+      elements.append(Paragraph(paragraph, styleP))
+
+      if len(pdfdata_nn)>0:
+        paragraph = "DSOs during nautical night:"
+        elements.append(Paragraph(paragraph, styleP))
+        colWidths=(1*cm, 5*cm)
+        t = Table(pdfdata_nn, colWidths=[2*cm] + [None] * (len(pdfdata_nn[0]) - 1), rowHeights=40, hAlign='LEFT')
+        table_style = TableStyle([
+            ('ALIGN',(1,1),(-2,-2),'RIGHT'),
+            ('BACKGROUND',(1,1),(-2,-2),colors.white),
+            ('TEXTCOLOR',(0,0),(1,-1),colors.black),
+            ('INNERGRID',(0,0),(-1,-1),0.25,colors.black),
+            ('BOX',(0,0),(-1,-1),0.25,colors.black),
+        ])
+        for row, values in enumerate(pdfdata_nn):
+          #print(row, values)
+          if row % 2 == 0:
+            table_style.add('BACKGROUND',(0,row),(1,row),colors.lightgrey)
+        t.setStyle(table_style)
+        elements.append(t)
+
+      if len(pdfdata_an)>0:
+        paragraph = "DSOs during astronomical night:"
+        elements.append(Paragraph(paragraph, styleP))
+        colWidths=(1*cm, 5*cm)
+        t = Table(pdfdata_an, colWidths=[2*cm] + [None] * (len(pdfdata_an[0]) - 1), rowHeights=40, hAlign='LEFT')
+        table_style = TableStyle([
+            ('ALIGN',(1,1),(-2,-2),'RIGHT'),
+            ('BACKGROUND',(1,1),(-2,-2),colors.white),
+            ('TEXTCOLOR',(0,0),(1,-1),colors.black),
+            ('INNERGRID',(0,0),(-1,-1),0.25,colors.black),
+            ('BOX',(0,0),(-1,-1),0.25,colors.black),
+        ])
+        for row, values in enumerate(pdfdata_an):
+          #print(row, values)
+          if row % 2 == 0:
+            table_style.add('BACKGROUND',(0,row),(1,row),colors.lightgrey)
+        t.setStyle(table_style)
+        elements.append(t)
+
+      if len(pdfdata_in)>0:
+        paragraph = "Invisible DSOs:"
+        elements.append(Paragraph(paragraph, styleP))
+        colWidths=(1*cm, 5*cm)
+        t = Table(pdfdata_in, colWidths=[2*cm] + [None] * (len(pdfdata_in[0]) - 1), rowHeights=40, hAlign='LEFT')
+        table_style = TableStyle([
+            ('ALIGN',(1,1),(-2,-2),'RIGHT'),
+            ('BACKGROUND',(1,1),(-2,-2),colors.white),
+            ('TEXTCOLOR',(0,0),(1,-1),colors.black),
+            ('INNERGRID',(0,0),(-1,-1),0.25,colors.black),
+            ('BOX',(0,0),(-1,-1),0.25,colors.black),
+        ])
+        for row, values in enumerate(pdfdata_in):
+          #print(row, values)
+          if row % 2 == 0:
+            table_style.add('BACKGROUND',(0,row),(1,row),colors.lightgrey)
+        t.setStyle(table_style)
+        elements.append(t)
+
+
+      # create PDF
+      doc.build(elements)
+
+      if options.message:
+        if debug:
+          print("\n\n\nSend results message:")
+          print(result_msg)
+        send_message.text(result_msg)
+        send_message.file(fileName)
 
   except Exception as e:
     print("DSO observation planning error " + str(dso_name) + ": " + str(e))

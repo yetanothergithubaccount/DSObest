@@ -19,7 +19,7 @@ moon below the horizon', 'moon in a different direction', 'moon illumination <
 - Python3 and a few modules
 
 
-```sudo apt install python3-pip```
+```sudo apt-get install python3-pip```
 
 ```sudo pip3 install matplotlib --break-system-packages```
 
@@ -34,6 +34,8 @@ moon below the horizon', 'moon in a different direction', 'moon illumination <
 ```sudo pip3 install suntime --break-system-packages```
 
 ```sudo pip3 install pyephem --break-system-packages```
+
+```sudo pip3 install reportlab --break-system-packages```
 
 ### Usage
 
@@ -437,6 +439,11 @@ python3 DSO_observation_planning.py --tonight --moon --justthetopones
 The optional option -r/--direction in combination with the options --tonight and --moon allows to look at the TOP DSOs of that night which appear in a certain direction (S/W/N/E) only:
 ```
 python3 DSO_observation_planning.py --tonight --moon --justthetopones --direction S
+```
+
+The optional option -c/--catalogue Messier|Caldwell allows to select a catalogue of well-known DSOs for tonight's check.
+```
+python3 DSO_observation_planning.py --tonight --moon --catalogue Messier
 ```
 
 ## Blog
